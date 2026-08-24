@@ -1,7 +1,7 @@
 Yes. This time we're specifying the fusion, not a generic social-media application wearing a TOML hat.
 
 The architecture is:
-
+```
 theMQL
   ├── message/query semantics
   ├── async runtime
@@ -33,7 +33,7 @@ theLiGI
   ├── content intelligence
   ├── platform adapters
   └── adaptive feedback
-
+```
 And everything is Rust-native. No Python subprocesses, no “just use Selenium over there”, no second runtime quietly growing a beard in the basement.
 
 Below are the three authoritative artifacts.
