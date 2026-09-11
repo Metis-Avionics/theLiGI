@@ -1,0 +1,67 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/core",
+    "crates/schema",
+    "crates/context",
+    "crates/message",
+    "crates/query",
+    "crates/runtime",
+    "crates/data_access",
+    "crates/repository",
+    "crates/cache",
+    "crates/authorization",
+    "crates/algorithm",
+    "crates/factory",
+    "crates/knowledge",
+    "crates/graph",
+    "crates/sparql",
+    "crates/topic",
+    "crates/inference",
+    "crates/content",
+    "crates/validation",
+    "crates/evidence",
+    "crates/acquisition",
+    "crates/http",
+    "crates/browser",
+    "crates/document",
+    "crates/platform",
+    "crates/linkedin",
+    "crates/x",
+    "crates/instagram",
+    "crates/scheduler",
+    "crates/telemetry",
+    "crates/feedback",
+    "crates/artifact",
+    "crates/security",
+    "crates/observability",
+    "crates/server",
+    "crates/cli",
+    "crates/desktop",
+]
+
+[workspace.package]
+edition = "2021"
+rust-version = "1.75"
+license = "MIT"
+
+[workspace.dependencies]
+tokio = { version = "1.35", features = ["full"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+uuid = { version = "1.6", features = ["v4", "serde"] }
+thiserror = "1.0"
+tracing = "0.1"
+tracing-subscriber = "0.3"
+anyhow = "1.0"
+reqwest = { version = "0.11", default-features = false, features = ["json", "rustls-tls", "rustls-tls-webpki-roots"] }
+async-trait = "0.1"
+clap = { version = "4.4", features = ["derive"] }
+chrono = { version = "0.4", features = ["serde"] }
+blake3 = "1.5"
+theligi-browser = { path = "crates/browser" }
+theligi-document = { path = "crates/document" }
+theligi-http = { path = "crates/http" }
+theligi-platform = { path = "crates/platform" }
+theligi-server = { path = "crates/server" }
+theligi-telemetry = { path = "crates/telemetry" }

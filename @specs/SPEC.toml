@@ -1,0 +1,817 @@
+# ============================================================
+# theLiGI
+# Linked Intelligence / Graph Intelligence
+#
+# Main Architectural Specification
+# ============================================================
+
+[spec]
+name = "theLiGI"
+version = "0.1.0"
+status = "experimental"
+authority = "highest"
+
+[project]
+name = "theLiGI"
+full_name = "Linked Intelligence Graph Intelligence"
+language = "rust"
+license = "MIT"
+
+description = """
+Native Rust adaptive commercial and social graph intelligence system.
+
+theLiGI observes external information and platform telemetry, normalizes
+that information into typed messages and graph entities, performs
+deterministic and learned inference, generates structured content,
+deploys through platform adapters, and feeds resulting telemetry back
+into the knowledge system.
+
+The architecture fuses the message/query/runtime model of theMQL with
+the data-access, caching, authorization, repository, algorithm and
+factory semantics of theDAF.
+"""
+
+[mission]
+primary = "Adaptive commercial intelligence."
+secondary = "Graph-native social intelligence."
+operating_model = "observe-represent-query-infer-generate-deploy-measure-adapt"
+design_lens = "metis"
+
+[architecture]
+style = "modular_rust_workspace"
+runtime = "single_rust_runtime"
+async = true
+native_rust = true
+platform_agnostic_core = true
+transport_agnostic_core = true
+storage_agnostic_core = true
+provider_agnostic_core = true
+dependency_composition = true
+specification_first = true
+
+[architecture.authority]
+spec = "highest"
+subsystem_specs = "second"
+tests = "third"
+public_interfaces = "fourth"
+implementation = "lowest"
+
+[architecture.rules]
+semantic_ownership = true
+explicit_boundaries = true
+typed_contracts = true
+dependency_first = true
+composition_over_reimplementation = true
+no_cross_runtime = true
+no_hidden_sidecars = true
+no_untracked_state = true
+no_silent_fallback = true
+no_silent_spec_override = true
+fail_closed_security = true
+deterministic_core = true
+async_first = true
+
+# ============================================================
+# Architecture inheritance
+# ============================================================
+
+[heritage.themql]
+repository = "RAliane-REBORN/theMQL"
+role = "runtime-message-query-architecture"
+
+[heritage.themql.inherit]
+message_model = true
+query_model = true
+async_execution = true
+transport_separation = true
+workspace_structure = true
+artifact_versioning = true
+specification_first = true
+telemetry = true
+living_documentation = true
+typed_errors = true
+
+[heritage.thedaf]
+repository = "RAliane-REBORN/theDAF"
+role = "data-access-semantics"
+
+[heritage.thedaf.inherit]
+repository_contract = true
+cache_contract = true
+algorithm_contract = true
+authorizer_contract = true
+data_access_contract = true
+factory_contract = true
+cas_mutation = true
+generation_tracking = true
+canonical_cache_keys = true
+authorization_on_cache_hits = true
+cache_invalidation = true
+typed_error_envelopes = true
+
+# ============================================================
+# Runtime
+# ============================================================
+
+[runtime]
+model = "single_process_rust"
+async_runtime = "tokio"
+
+[ runtime.boundaries ]
+message = true
+query = true
+data_access = true
+knowledge = true
+inference = true
+content = true
+acquisition = true
+platform = true
+scheduler = true
+telemetry = true
+feedback = true
+
+[runtime.forbidden]
+python_runtime = true
+node_runtime = true
+shell_based_worker_architecture = true
+cross_runtime_rpc = true
+language_specific_sidecar = true
+
+# ============================================================
+# Workspace
+# ============================================================
+
+[workspace]
+resolver = "2"
+
+[workspace.crates]
+core = "theligi-core"
+schema = "theligi-schema"
+context = "theligi-context"
+
+message = "theligi-message"
+query = "theligi-query"
+runtime = "theligi-runtime"
+
+data_access = "theligi-data-access"
+repository = "theligi-repository"
+cache = "theligi-cache"
+authorization = "theligi-authorization"
+algorithm = "theligi-algorithm"
+factory = "theligi-factory"
+
+knowledge = "theligi-knowledge"
+graph = "theligi-graph"
+sparql = "theligi-sparql"
+
+topic = "theligi-topic"
+inference = "theligi-inference"
+
+content = "theligi-content"
+validation = "theligi-validation"
+evidence = "theligi-evidence"
+
+acquisition = "theligi-acquisition"
+http = "theligi-http"
+browser = "theligi-browser"
+document = "theligi-document"
+
+platform = "theligi-platform"
+linkedin = "theligi-linkedin"
+x = "theligi-x"
+instagram = "theligi-instagram"
+
+scheduler = "theligi-scheduler"
+
+telemetry = "theligi-telemetry"
+feedback = "theligi-feedback"
+
+artifact = "theligi-artifact"
+security = "theligi-security"
+observability = "theligi-observability"
+
+server = "theligi-server"
+cli = "theligi-cli"
+desktop = "theligi-desktop"
+
+# ============================================================
+# Core semantic model
+# ============================================================
+
+[semantic]
+owner = "theligi-core"
+
+[semantic.entities]
+Identity = true
+User = true
+Account = true
+Platform = true
+Resource = true
+Topic = true
+Concept = true
+Audience = true
+ContentArtifact = true
+ContentSeries = true
+Claim = true
+Evidence = true
+Interaction = true
+Signal = true
+Campaign = true
+CommercialOutcome = true
+Source = true
+Document = true
+ModelVersion = true
+Prediction = true
+GraphNode = true
+GraphEdge = true
+
+[semantic.metadata]
+schema_version = true
+resource_id = true
+created_at = true
+updated_at = true
+source = true
+correlation_id = true
+causation_id = true
+lineage = true
+
+# ============================================================
+# Message architecture
+# ============================================================
+
+[message]
+owner = "theligi-message"
+transport_independent = true
+typed_payload = true
+schema_versioned = true
+correlation_supported = true
+causation_supported = true
+idempotency_supported = true
+
+[message.operations]
+observe = true
+query = true
+generate = true
+schedule = true
+publish = true
+measure = true
+adapt = true
+
+[message.lineage]
+source_required = true
+timestamp_required = true
+producer_required = true
+schema_version_required = true
+
+# ============================================================
+# Query architecture
+# ============================================================
+
+[query]
+owner = "theligi-query"
+transport_independent = true
+side_effect_free = true
+typed = true
+cache_aware = true
+authorization_aware = true
+
+[query.pipeline]
+parse = true
+validate = true
+authorize = true
+cache_lookup = true
+repository_lookup = true
+algorithm = true
+response = true
+cache_population = true
+
+# ============================================================
+# theDAF data access architecture
+# ============================================================
+
+[data_access]
+owner = "theligi-data-access"
+
+[data_access.contracts]
+Repository = true
+Cache = true
+Algorithm = true
+Authorizer = true
+DataAccess = true
+Factory = true
+
+[data_access.repository]
+create = true
+get = true
+save = true
+delete = true
+try_update = true
+try_delete = true
+
+[data_access.repository.consistency]
+compare_and_swap = true
+generation_tracking = true
+toctou_protection = true
+mutation_result_typed = true
+
+[data_access.cache]
+get = true
+set = true
+delete = true
+delete_prefix = true
+clear = true
+
+[data_access.cache.key]
+canonicalization = "canonical_json"
+hash = "sha256"
+resource_identity = true
+query_identity = true
+filter_identity = true
+algorithm_identity = true
+user_identity_when_required = true
+
+[data_access.authorization]
+fail_closed = true
+authorization_before_repository = true
+authorization_before_mutation = true
+authorization_on_cache_hit = true
+authorization_context_explicit = true
+
+[data_access.coherence]
+mutation_invalidates_cache = true
+generation_must_match = true
+stale_entries_rejected = true
+cache_context_isolated = true
+
+[data_access.execution]
+single_repository_read_per_cache_miss = true
+algorithm_after_repository = true
+cache_population_after_success = true
+typed_errors = true
+
+# ============================================================
+# Cache hierarchy
+# ============================================================
+
+[cache]
+hierarchical = true
+authority = "authoritative_store"
+
+[cache.tiers]
+L0 = "request_local"
+L1 = "lru"
+L2 = "moka"
+L3 = "redis"
+L4 = "sled"
+L5 = "authoritative"
+
+[cache.L1]
+implementation = "lru"
+purpose = "ultra_hot_request_reuse"
+scope = "request_or_local"
+
+[cache.L2]
+implementation = "moka"
+purpose = "concurrent_process_cache"
+scope = "process"
+
+[cache.L3]
+implementation = "redis"
+purpose = "distributed_shared_cache"
+scope = "distributed"
+
+[cache.L4]
+implementation = "sled"
+purpose = "durable_local_materialized_state"
+scope = "node"
+
+[cache.invariants]
+canonical_keys = true
+generation_validation = true
+prefix_invalidation = true
+typed_values = true
+serialization_versioned = true
+user_context_isolated = true
+authorization_on_hit = true
+
+# ============================================================
+# Knowledge architecture
+# ============================================================
+
+[knowledge]
+owner = "theligi-knowledge"
+
+[knowledge.backends]
+oxigraph = true
+helixdb = true
+
+[knowledge.oxigraph]
+role = "rdf_semantic_query"
+authority = "semantic_graph"
+query_language = "sparql"
+
+[knowledge.helixdb]
+role = "operational_graph_vector_intelligence"
+authority = "operational_knowledge"
+
+[knowledge.consistency]
+dual_store = true
+explicit_projection = true
+projection_versioned = true
+provenance_required = true
+no_implicit_cross_store_mutation = true
+
+[knowledge.graph]
+nodes = [
+    "identity",
+    "account",
+    "platform",
+    "topic",
+    "concept",
+    "technology",
+    "audience",
+    "content",
+    "interaction",
+    "signal",
+    "campaign",
+    "commercial_outcome",
+    "source",
+    "evidence",
+    "model"
+]
+
+[knowledge.relationships]
+related_to = true
+derived_from = true
+similar_to = true
+supports = true
+contradicts = true
+published_on = true
+targeted_at = true
+generated = true
+received = true
+performed = true
+influenced = true
+caused = true
+associated_with = true
+supported_by = true
+
+# ============================================================
+# Acquisition architecture
+# ============================================================
+
+[acquisition]
+owner = "theligi-acquisition"
+rust_native = true
+observable = true
+rate_limited = true
+provenance_first = true
+
+[acquisition.http]
+implementation = "reqwest"
+
+[acquisition.html]
+parser = "scraper"
+standards_parser = "html5ever"
+streaming_processor = "lol_html"
+
+[acquisition.browser]
+webdriver = true
+implementation_candidates = [
+    "thirtyfour",
+    "fantoccini"
+]
+
+[acquisition.browser.abstraction]
+trait = "BrowserProvider"
+provider_hidden = true
+platform_semantics_hidden = true
+
+[acquisition.document]
+trait = "DocumentParser"
+normalized_output = true
+selector_based = true
+text_extraction = true
+link_extraction = true
+metadata_extraction = true
+
+[acquisition.provenance]
+url = true
+retrieved_at = true
+content_hash = true
+acquisition_method = true
+parser_version = true
+extraction_rule_version = true
+source_artifact = true
+
+[acquisition.output]
+message = true
+repository = true
+knowledge_graph = true
+direct_backend_access_forbidden = true
+
+# ============================================================
+# Topic intelligence
+# ============================================================
+
+[topic]
+seed = "keyword_dictionary"
+annual_target = 52
+weekly_target = 1
+
+[topic.discovery]
+sparql = true
+graph_traversal = true
+semantic_similarity = true
+coverage_analysis = true
+historical_performance = true
+emerging_relationships = true
+duplicate_detection = true
+saturation_detection = true
+
+[topic.ranking]
+novelty = true
+relevance = true
+commercial_value = true
+audience_affinity = true
+platform_affinity = true
+evidence_availability = true
+historical_performance = true
+saturation_penalty = true
+duplication_penalty = true
+
+# ============================================================
+# Content
+# ============================================================
+
+[content]
+posts_per_series = 6
+weekly_series = 1
+annual_series = 52
+annual_posts = 312
+
+[content.sequence]
+order = [
+    "hot",
+    "impact",
+    "explanation",
+    "problem",
+    "mechanism",
+    "evidence"
+]
+
+[content.invariants]
+shared_topic = true
+shared_thesis = true
+causal_consistency = true
+no_topic_drift = true
+evidence_required = true
+lineage_required = true
+artifact_hash = true
+
+# ============================================================
+# Inference
+# ============================================================
+
+[inference]
+owner = "theligi-inference"
+type = "gnn"
+
+[inference.tasks]
+node_embedding = true
+link_prediction = true
+topic_ranking = true
+audience_affinity = true
+platform_affinity = true
+content_affinity = true
+performance_prediction = true
+emerging_topic_detection = true
+
+[inference.provenance]
+model_version = true
+dataset_version = true
+feature_schema_version = true
+confidence = true
+trace = true
+
+[inference.authority]
+recommendation_only = true
+automatic_publish = false
+
+# ============================================================
+# Platform adapters
+# ============================================================
+
+[platform]
+adapter_architecture = true
+core_platform_agnostic = true
+
+[platform.contract]
+authenticate = true
+resolve_identity = true
+publish = true
+schedule = true
+delete = true
+fetch_content = true
+fetch_interactions = true
+fetch_metrics = true
+
+[platform.linkedin]
+enabled = true
+
+[platform.x]
+enabled = true
+
+[platform.instagram]
+enabled = true
+
+[platform.future]
+dynamic_registration = true
+
+# ============================================================
+# Authentication
+# ============================================================
+
+[authentication]
+implementation = "betterauth-rs"
+identity_first = true
+session_based = true
+authorization_separate = true
+
+[authentication.security]
+credentials_never_graph_persisted = true
+tokens_never_graph_persisted = true
+least_privilege = true
+audit_log = true
+
+# ============================================================
+# Scheduler
+# ============================================================
+
+[scheduler]
+async = true
+timezone_aware = true
+idempotent = true
+retryable = true
+dead_letter = true
+human_approval = true
+
+[scheduler.content]
+posts_per_week = 6
+rest_day = "sunday"
+
+# ============================================================
+# Telemetry
+# ============================================================
+
+[telemetry]
+first_class = true
+immutable_observations = true
+schema_versioned = true
+lineage_required = true
+
+[telemetry.metrics]
+impressions = true
+engagement = true
+comments = true
+shares = true
+saves = true
+followers = true
+profile_views = true
+clicks = true
+conversions = true
+
+# ============================================================
+# Feedback
+# ============================================================
+
+[feedback]
+closed_loop = true
+
+[feedback.pipeline]
+observe = true
+normalize = true
+persist = true
+query = true
+infer = true
+rank = true
+generate = true
+deploy = true
+measure = true
+adapt = true
+
+[feedback.adaptation]
+topic_scores = true
+platform_affinity = true
+audience_affinity = true
+content_affinity = true
+topic_saturation = true
+emerging_topics = true
+
+[feedback.history]
+observations_immutable = true
+policy_versioned = true
+reproducible = true
+
+# ============================================================
+# Artifact/version model
+# ============================================================
+
+[artifact]
+versioned = true
+hashed = true
+schema_versioned = true
+lineage_required = true
+rollback_supported = true
+
+[artifact.hash]
+algorithm = "blake3"
+
+# ============================================================
+# Security
+# ============================================================
+
+[security]
+fail_closed = true
+least_privilege = true
+credential_isolation = true
+audit_logging = true
+authorization_required = true
+
+[security.forbidden]
+credential_in_graph = true
+token_in_graph = true
+secret_in_logs = true
+unauthorized_cache_access = true
+
+# ============================================================
+# Observability
+# ============================================================
+
+[observability]
+structured_logging = true
+metrics = true
+tracing = true
+health_checks = true
+correlation_ids = true
+causation_ids = true
+decision_trace = true
+content_lineage = true
+acquisition_lineage = true
+prediction_trace = true
+
+# ============================================================
+# Development
+# ============================================================
+
+[development]
+spec_first = true
+tests_first_for_contracts = true
+adr_for_architecture = true
+public_api_documentation = true
+dependency_audit = true
+license_audit = true
+clippy = true
+fmt = true
+integration_tests = true
+contract_tests = true
+property_tests = true
+end_to_end_tests = true
+
+[development.rules]
+inspect_before_edit = true
+preserve_existing_contracts = true
+minimal_change = true
+no_speculative_abstraction = true
+no_dependency_reimplementation = true
+no_cross_runtime = true
+
+
+
+# ============================================================
+# Content graph models
+# ============================================================
+
+[content.graph]
+owner = "theligi-content"
+
+[content.graph.discrete]
+root = "ContentSeries"
+node_types = ["ContentSeries", "ContentArtifact", "Claim", "Evidence"]
+edge_types = ["HAS_POST", "NEXT_IN_SERIES", "SUPPORTS", "CAUSES", "DERIVES_FROM"]
+cardinality = "exactly_6_posts_per_series"
+lifecycle = "create_publish_complete"
+immutable_after_publish = true
+
+[content.graph.continuous]
+root = "Topic"
+node_types = ["ContentArtifact", "Interaction", "Signal", "TelemetryObservation"]
+edge_types = ["CHRONOLOGICAL_ADJACENCY", "RELATED_TO", "INFLUENCED_BY"]
+boundedness = "unbounded_stream"
+lifecycle = "append_only"
+immutable_observations = true
+
+[content.graph.cross_model]
+shared_roots_allowed = false
+discrete_series_may_target_continuous_topic = true
+continuous_stream_may_contain_discrete_series_references = true
