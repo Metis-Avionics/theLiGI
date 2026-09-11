@@ -1,7 +1,11 @@
-//! Discrete content-series sub-model for theligi-content.
+//! Discrete content-series sub-model for `theligi-content`.
 use crate::{Claim, ContentArtifact, ContentNodeId, ContentResult, ContentSeries, Evidence};
 
-/// Build a series skeleton with N placeholder artifacts.
+/// Build a series skeleton with `post_count` placeholder artifacts.
+///
+/// # Errors
+///
+/// Returns `ContentError::SeriesInvariant` if the series cannot be created.
 pub fn build_series_skeleton(
     title: impl Into<String>,
     thesis: impl Into<String>,
@@ -9,7 +13,7 @@ pub fn build_series_skeleton(
 ) -> ContentResult<ContentSeries> {
     let mut series = ContentSeries::new(title, thesis);
     for i in 0..post_count {
-        let artifact = ContentArtifact::new(series.id, format!("post-{}", i), i);
+        let artifact = ContentArtifact::new(series.id, format!("post-{i}"), i);
         series.post_ids.push(artifact.id);
     }
     Ok(series)

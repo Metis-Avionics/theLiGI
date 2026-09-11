@@ -8,7 +8,14 @@ pub struct InferenceEngineImpl {
     _private: (),
 }
 
+impl Default for InferenceEngineImpl {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl InferenceEngineImpl {
+    #[must_use]
     pub fn new() -> Self {
         Self { _private: () }
     }

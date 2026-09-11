@@ -123,9 +123,9 @@ pub fn should_rollback(
         RollbackTrigger::MetricRegression => {
             regression_detected(&state.metrics_since_apply, current_metrics)
         }
-        RollbackTrigger::ErrorRateSpike => current_metrics
-            .get("error_rate")
-            .is_some_and(|v| *v > 0.05),
+        RollbackTrigger::ErrorRateSpike => {
+            current_metrics.get("error_rate").is_some_and(|v| *v > 0.05)
+        }
         RollbackTrigger::Manual => false,
     }
 }

@@ -17,6 +17,12 @@ impl StubSparqlExecutor {
     }
 }
 
+impl Default for StubSparqlExecutor {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 #[async_trait::async_trait]
 impl SparqlExecutor for StubSparqlExecutor {
     async fn execute(&self, query: &SparqlQuery) -> SparqlResultType<SparqlResult> {

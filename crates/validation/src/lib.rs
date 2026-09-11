@@ -4,13 +4,22 @@
 //! share a common topic/thesis, maintain causal consistency between
 //! claims, and have verifiable lineage for each artifact.
 
+#![deny(warnings)]
+#![warn(clippy::pedantic)]
+#![warn(
+    clippy::unwrap_used,
+    clippy::expect_used,
+    clippy::panic,
+    clippy::missing_errors_doc
+)]
+
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 pub type NodeId = Uuid;
 pub type SeriesId = Uuid;
 
-/// Result of validating a single ContentSeries.
+/// Result of validating a single `ContentSeries`.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ValidationResult {
     pub series_id: SeriesId,
@@ -19,6 +28,7 @@ pub struct ValidationResult {
 }
 
 impl ValidationResult {
+    #[must_use]
     pub fn ok(series_id: SeriesId) -> Self {
         Self {
             series_id,
@@ -27,6 +37,7 @@ impl ValidationResult {
         }
     }
 
+    #[must_use]
     pub fn failed(series_id: SeriesId, violations: Vec<Violation>) -> Self {
         Self {
             series_id,
@@ -84,7 +95,7 @@ pub enum ValidationError {
 
 pub type ValidationResultType<T> = std::result::Result<T, ValidationError>;
 
-/// Trait for validating ContentSeries invariants.
+/// Trait for validating `ContentSeries` invariants.
 #[async_trait::async_trait]
 pub trait SeriesValidator: Send + Sync {
     async fn validate_series(&self, series_id: SeriesId) -> ValidationResultType<ValidationResult>;

@@ -4,7 +4,17 @@
 //! functions for embedding, link prediction, topic ranking, affinity
 //! scoring and performance prediction without exposing model internals.
 
+#![deny(warnings)]
+#![warn(clippy::pedantic)]
+#![warn(
+    clippy::unwrap_used,
+    clippy::expect_used,
+    clippy::panic,
+    clippy::missing_errors_doc
+)]
+
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use uuid::Uuid;
 
 pub type NodeId = Uuid;
@@ -19,6 +29,7 @@ pub struct NodeEmbedding {
 }
 
 impl NodeEmbedding {
+    #[must_use]
     pub fn new(node_id: NodeId, vector: Vec<f32>) -> Self {
         let dimension = vector.len();
         Self {
@@ -54,8 +65,6 @@ pub struct AffinityScores {
     pub platform: HashMap<String, f64>,
     pub content: HashMap<String, f64>,
 }
-
-use std::collections::HashMap;
 
 /// Predicted performance signal for a content artifact.
 #[derive(Debug, Clone, Serialize, Deserialize)]

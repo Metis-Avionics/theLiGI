@@ -9,6 +9,15 @@
 //!   related-to and influence edges that model how content evolves over
 //!   time.
 
+#![deny(warnings)]
+#![warn(clippy::pedantic)]
+#![warn(
+    clippy::unwrap_used,
+    clippy::expect_used,
+    clippy::panic,
+    clippy::missing_errors_doc
+)]
+
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use uuid::Uuid;
@@ -64,7 +73,7 @@ pub enum ContinuousEdgeKind {
 // Discrete model
 // ---------------------------------------------------------------------------
 
-/// A ContentSeries is a top-level series node.
+/// A [`ContentSeries`] is a top-level series node.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ContentSeries {
     pub id: ContentNodeId,
@@ -76,6 +85,7 @@ pub struct ContentSeries {
 }
 
 impl ContentSeries {
+    #[must_use]
     pub fn new(title: impl Into<String>, thesis: impl Into<String>) -> Self {
         Self {
             id: Uuid::new_v4(),
@@ -88,7 +98,7 @@ impl ContentSeries {
     }
 }
 
-/// A single post / artifact within a ContentSeries.
+/// A single post / artifact within a [`ContentSeries`].
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ContentArtifact {
     pub id: ContentNodeId,
@@ -100,6 +110,7 @@ pub struct ContentArtifact {
 }
 
 impl ContentArtifact {
+    #[must_use]
     pub fn new(series_id: ContentNodeId, title: impl Into<String>, sequence: usize) -> Self {
         Self {
             id: Uuid::new_v4(),
@@ -112,7 +123,7 @@ impl ContentArtifact {
     }
 }
 
-/// A claim asserted in a ContentArtifact.
+/// A claim asserted in a [`ContentArtifact`].
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Claim {
     pub id: ContentNodeId,
@@ -123,6 +134,7 @@ pub struct Claim {
 }
 
 impl Claim {
+    #[must_use]
     pub fn new(artifact_id: ContentNodeId, text: impl Into<String>) -> Self {
         Self {
             id: Uuid::new_v4(),
@@ -146,6 +158,7 @@ pub struct Evidence {
 }
 
 impl Evidence {
+    #[must_use]
     pub fn new(claim_id: ContentNodeId, excerpt: impl Into<String>, supports: bool) -> Self {
         Self {
             id: Uuid::new_v4(),
@@ -171,6 +184,7 @@ pub struct TopicNode {
 }
 
 impl TopicNode {
+    #[must_use]
     pub fn new(label: impl Into<String>) -> Self {
         Self {
             id: Uuid::new_v4(),
@@ -192,6 +206,7 @@ pub struct TemporalEdge {
 }
 
 impl TemporalEdge {
+    #[must_use]
     pub fn new(
         source: ContentNodeId,
         target: ContentNodeId,
@@ -245,7 +260,7 @@ mod tests {
             DiscreteEdgeKind::DerivesFrom,
         ]
         .iter()
-        .map(|e| format!("{:?}", e))
+        .map(|e| format!("{e:?}"))
         .collect();
         let continuous: std::collections::HashSet<_> = [
             ContinuousEdgeKind::ChronologicalAdjacency,
@@ -253,7 +268,7 @@ mod tests {
             ContinuousEdgeKind::InfluencedBy,
         ]
         .iter()
-        .map(|e| format!("{:?}", e))
+        .map(|e| format!("{e:?}"))
         .collect();
         assert!(
             discrete.is_disjoint(&continuous),
@@ -270,9 +285,10 @@ mod tests {
     }
 
     #[test]
-    fn discrete_build_series_skeleton() {
-        let series = discrete::build_series_skeleton("Test", "Thesis", 3).unwrap();
+    fn discrete_build_series_skeleton() -> Result<(), ContentError> {
+        let series = discrete::build_series_skeleton("Test", "Thesis", 3)?;
         assert_eq!(series.post_ids.len(), 3);
+        Ok(())
     }
 
     #[test]

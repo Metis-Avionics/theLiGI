@@ -1,7 +1,8 @@
-//! Continuous topic-rooted temporal stream for theligi-content.
+//! Continuous topic-rooted temporal stream for `theligi-content`.
 use crate::{ContentNodeId, ContinuousEdgeKind, TemporalEdge, TopicNode};
 
 /// Link two nodes chronologically.
+#[must_use]
 pub fn link_chronological(
     source: ContentNodeId,
     target: ContentNodeId,
