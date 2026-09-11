@@ -342,6 +342,15 @@ sparql = true
 [topic.inference]
 gnn = true
 
+[topic.pipeline]
+selection_policy = true
+series_assignment = true
+typed_pipeline = true
+transformation_order = ["hot", "impact", "explanation", "problem", "mechanism", "evidence"]
+
+[topic.pipeline.affinity]
+bridge_gnn_to_artifact = true
+
 # ============================================================
 # Inference
 # ============================================================
@@ -360,6 +369,19 @@ requires = [
 ]
 
 authority = "recommendation"
+
+# ============================================================
+# Evidence
+# ============================================================
+
+[evidence]
+crate = "theligi-evidence"
+
+[evidence.sufficiency]
+hierarchy = ["primary_source", "secondary_source", "expert_opinion", "observational"]
+thresholds_per_stage = true
+lineage_hash_chain = true
+hash_algorithm = "blake3"
 
 # ============================================================
 # Content
@@ -385,6 +407,17 @@ invariants = [
     "evidence_required",
     "lineage_required"
 ]
+
+[content.state_machine]
+series_fsm = true
+topic_stream_append_only = true
+
+[content.state_machine.series_states]
+states = ["draft", "publishing", "published", "completed"]
+
+[content.state_machine.guards]
+publish_guard = "exactly_6_posts AND shared_topic_lock AND causal_dag_valid"
+complete_guard = "all_posts_published AND evidence_present"
 
 # ============================================================
 # Validation
@@ -467,6 +500,11 @@ metrics = [
     "conversions"
 ]
 
+[telemetry.normalization]
+canonical_schema = true
+platform_rules = true
+immutability_enforcement = "repository_layer"
+
 # ============================================================
 # Feedback
 # ============================================================
@@ -495,6 +533,11 @@ updates = [
     "content_affinity",
     "emerging_topics"
 ]
+
+[feedback.adaptation_policy]
+versioned = true
+score_updates = true
+rollback_on_regression = true
 
 # ============================================================
 # Artifact

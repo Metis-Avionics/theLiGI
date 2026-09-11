@@ -227,6 +227,9 @@ pub type ContentResult<T> = std::result::Result<T, ContentError>;
 pub mod continuous;
 pub mod discrete;
 pub mod model;
+pub mod state_machine;
+
+pub use state_machine::{SeriesState, SeriesStateMachine, TopicStreamContract};
 
 #[cfg(test)]
 mod tests {

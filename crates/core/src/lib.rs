@@ -24,7 +24,6 @@ pub use themql_core::{
 
 use serde::{Deserialize, Serialize};
 use std::fmt;
-use uuid::Uuid;
 
 /// Unique identifier for a resource in theLiGI domain.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -111,6 +110,7 @@ pub enum CoreError {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use uuid::Uuid;
 
     #[test]
     fn resource_identity_roundtrip() {

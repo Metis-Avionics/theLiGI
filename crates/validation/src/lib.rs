@@ -107,6 +107,20 @@ pub trait SeriesValidator: Send + Sync {
     async fn validate_causal_consistency(&self, series_id: SeriesId) -> ValidationResultType<bool>;
 
     async fn validate_lineage(&self, series_id: SeriesId) -> ValidationResultType<bool>;
+
+    async fn validate_state_machine(
+        &self,
+        series_id: SeriesId,
+        state_machine: &theligi_content::SeriesStateMachine,
+    ) -> ValidationResultType<bool>;
+
+    async fn validate_causal_dag(&self, series_id: SeriesId) -> ValidationResultType<bool>;
+
+    async fn validate_topic_stream_append_only(
+        &self,
+        series_id: SeriesId,
+        contract: &theligi_content::TopicStreamContract,
+    ) -> ValidationResultType<bool>;
 }
 
 pub mod report;

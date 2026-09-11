@@ -1792,6 +1792,7 @@ name = "theligi-evidence"
 version = "0.1.0"
 dependencies = [
  "async-trait",
+ "blake3",
  "serde",
  "serde_json",
  "thiserror 1.0.69",
@@ -2076,6 +2077,7 @@ dependencies = [
  "async-trait",
  "serde",
  "serde_json",
+ "theligi-content",
  "thiserror 1.0.69",
  "tokio",
  "tracing",

@@ -599,6 +599,27 @@ recommendation_only = true
 automatic_publish = false
 
 # ============================================================
+# Evidence Sufficiency Model
+# ============================================================
+
+[evidence_sufficiency]
+hierarchy = ["primary_source", "secondary_source", "expert_opinion", "observational"]
+
+[evidence_sufficiency.thresholds]
+evidence_post = "primary_source_required"
+problem_post = "secondary_source_minimum"
+explanation_post = "secondary_source_minimum"
+mechanism_post = "primary_source_required"
+impact_post = "primary_source_required"
+hot_post = "secondary_source_minimum"
+
+[evidence_sufficiency.lineage]
+hash_chain = true
+hash_algorithm = "blake3"
+chain_links = ["source", "evidence", "claim", "post", "series"]
+verification_per_link = true
+
+# ============================================================
 # Platform adapters
 # ============================================================
 
@@ -682,6 +703,33 @@ clicks = true
 conversions = true
 
 # ============================================================
+# Telemetry Normalization Schema
+# ============================================================
+
+[telemetry.normalization]
+canonical_metrics = ["impressions", "engagement_rate", "comments", "shares", "saves", "followers", "profile_views", "clicks", "conversions"]
+platform_specific_rules = true
+immutability_enforcement = "repository_layer"
+
+[telemetry.normalization.platform_rules.linkedin]
+reactions = "engagement"
+comments = "comments"
+shares = "shares"
+saves = "saves"
+
+[telemetry.normalization.platform_rules.x]
+likes = "engagement"
+retweets = "shares"
+replies = "comments"
+bookmarks = "saves"
+
+[telemetry.normalization.platform_rules.instagram]
+likes = "engagement"
+comments = "comments"
+shares = "shares"
+saves = "saves"
+
+# ============================================================
 # Feedback
 # ============================================================
 
@@ -712,6 +760,24 @@ emerging_topics = true
 observations_immutable = true
 policy_versioned = true
 reproducible = true
+
+# ============================================================
+# Adaptation Policy Engine
+# ============================================================
+
+[adaptation_policy]
+versioned = true
+separate_from_observations = true
+
+[adaptation_policy.score_updates]
+topic_scores = "telemetry_delta_propagation"
+platform_affinity = "telemetry_delta_propagation"
+audience_affinity = "telemetry_delta_propagation"
+
+[adaptation_policy.rollback]
+trigger = "metric_regression"
+revert_to = "last_known_good_policy_version"
+auto_revert = true
 
 # ============================================================
 # Artifact/version model
@@ -815,3 +881,46 @@ immutable_observations = true
 shared_roots_allowed = false
 discrete_series_may_target_continuous_topic = true
 continuous_stream_may_contain_discrete_series_references = true
+
+# ============================================================
+# Content Graph State Machines
+# ============================================================
+
+[content_graph.state_machines]
+
+[content_graph.state_machines.series]
+states = ["draft", "publishing", "published", "completed"]
+initial = "draft"
+terminal = "completed"
+
+[content_graph.state_machines.series.guards]
+publish = "exactly_6_posts AND shared_topic_lock AND causal_dag_valid"
+complete = "all_posts_published AND evidence_present"
+revert_to_draft = "publish_guard_fails"
+
+[content_graph.state_machines.topic_stream]
+mode = "append_only"
+chronological_adjacency_auto_maintained = true
+windowed_query_bounds_enforced = true
+
+# ============================================================
+# Topic → Content Pipeline
+# ============================================================
+
+[topic_content_pipeline]
+
+[topic_content_pipeline.selection]
+annual_target = 52
+weekly_target = 1
+saturation_penalty = true
+duplication_guard = true
+
+[topic_content_pipeline.series_assignment]
+one_topic_one_series_per_week = true
+transformation_order = ["hot", "impact", "explanation", "problem", "mechanism", "evidence"]
+typed_pipeline = true
+
+[topic_content_pipeline.content_affinity]
+bridge_gnn_to_artifact = true
+input = "theligi-inference GNN outputs"
+output = "theligi-content artifact generation"

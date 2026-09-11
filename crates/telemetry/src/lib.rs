@@ -3,6 +3,8 @@
 use thiserror::Error;
 use uuid::Uuid;
 
+pub mod normalization;
+
 /// Errors that can occur while recording telemetry.
 #[derive(Error, Debug)]
 pub enum TelemetryError {

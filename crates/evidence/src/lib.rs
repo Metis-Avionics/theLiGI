@@ -147,3 +147,4 @@ pub trait EvidenceScorer: Send + Sync {
 
 pub mod provenance;
 pub mod scorer;
+pub mod sufficiency;

@@ -3,6 +3,8 @@
 use thiserror::Error;
 use uuid::Uuid;
 
+pub mod adaptation;
+
 /// Errors that can occur during feedback pipeline processing.
 #[derive(Error, Debug)]
 pub enum FeedbackError {
