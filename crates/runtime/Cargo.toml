@@ -11,8 +11,9 @@ crate-type = ["rlib"]
 theligi-core = { path = "../core" }
 theligi-context = { path = "../context" }
 theligi-message = { path = "../message" }
-theligi-query = { path = "../query" }
-tokio = { workspace = true }
+tokio = { workspace = true, features = ["full"] }
 serde = { workspace = true, features = ["derive"] }
+thiserror = { workspace = true }
 tracing = { workspace = true }
+themql-runtime = { path = "../../../theMQL/crates/themql-runtime", package = "themql-runtime" }
 anyhow = { workspace = true }

@@ -1,8 +1,8 @@
 #![warn(missing_docs)]
 //! Spec-derived type definitions for theLIGI schemas.
 //!
-//! Contains types derived from the platform specification,
-//! built on top of the core primitives.
+//! Inherits canonical schema types from `themql-schema` (theMQL),
+//! then adds theLiGI-specific resource schema definitions.
 
 use serde::{Deserialize, Serialize};
 use theligi_core::{ResourceIdentity, SchemaVersion};

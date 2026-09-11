@@ -12,3 +12,4 @@ reqwest = { workspace = true }
 tokio = { workspace = true }
 thiserror = { workspace = true }
 serde = { workspace = true }
+daf-http = { path = "../../../theDAF/crates/daf-http", package = "daf-http" }

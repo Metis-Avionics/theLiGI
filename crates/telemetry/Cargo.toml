@@ -15,3 +15,4 @@ serde_json = { workspace = true }
 uuid = { workspace = true }
 async-trait = { workspace = true }
 chrono = { workspace = true }
+themql-telemetry = { path = "../../../theMQL/crates/themql-telemetry", package = "themql-telemetry" }

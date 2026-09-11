@@ -1,13 +1,32 @@
 #![warn(missing_docs)]
 //! Core semantic types and primitives for theLIGI.
 //!
-//! Provides foundational identity, lineage, and error types
-//! shared across all crates in the workspace.
+//! Inherits canonical type identities from `themql-core` and `daf-core`,
+//! then adds theLiGI-specific lineage, schema versioning, and error types.
+//!
+//! ## Inheritance
+//!
+//! From **theMQL** (`themql-core`):
+//!   - `MessageId`, `CorrelationId`, `CausationId`, `TraceId`
+//!   - `Message`, `Subject`, `Operation`, `Payload`, `Metadata`
+//!
+//! From **theDAF** (`daf-core`):
+//!   - `ResourceId`, `UserId`, `CacheEntry`, `Tier`
+//!
+//! theLiGI extensions:
+//!   - `ResourceIdentity`, `Lineage`, `SchemaVersion`
+//!   - `CoreError`
+
+pub use daf_core::{CacheEntry, ResourceId, Tier, UserId};
+pub use themql_core::{
+    CausationId, CorrelationId, Message, MessageId, Metadata, Operation, Payload, Subject, TraceId,
+};
 
 use serde::{Deserialize, Serialize};
 use std::fmt;
+use uuid::Uuid;
 
-/// Unique identifier for a resource.
+/// Unique identifier for a resource in theLiGI domain.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct ResourceIdentity(pub String);
 
@@ -46,50 +65,6 @@ impl Lineage {
 }
 
 impl fmt::Display for Lineage {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.0)
-    }
-}
-
-/// Identifier used to correlate related events or requests.
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
-pub struct CorrelationId(pub String);
-
-impl CorrelationId {
-    /// Create a new `CorrelationId`.
-    pub fn new(id: impl Into<String>) -> Self {
-        Self(id.into())
-    }
-
-    /// Returns the inner string.
-    pub fn as_str(&self) -> &str {
-        &self.0
-    }
-}
-
-impl fmt::Display for CorrelationId {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.0)
-    }
-}
-
-/// Identifier that points to the event that caused this event.
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
-pub struct CausationId(pub String);
-
-impl CausationId {
-    /// Create a new `CausationId`.
-    pub fn new(id: impl Into<String>) -> Self {
-        Self(id.into())
-    }
-
-    /// Returns the inner string.
-    pub fn as_str(&self) -> &str {
-        &self.0
-    }
-}
-
-impl fmt::Display for CausationId {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.0)
     }
@@ -151,16 +126,15 @@ mod tests {
     }
 
     #[test]
-    fn correlation_id_uniqueness() {
-        let c1 = CorrelationId::new(uuid::Uuid::new_v4());
-        let c2 = CorrelationId::new(uuid::Uuid::new_v4());
-        assert_ne!(c1, c2);
+    fn correlation_id_from_themql() {
+        let cid = CorrelationId::new();
+        assert!(cid.0 != Uuid::default());
     }
 
     #[test]
-    fn causation_id_display() {
-        let cid = CausationId::new("cause-001");
-        assert_eq!(cid.to_string(), "cause-001");
+    fn resource_id_from_daf() {
+        let rid = ResourceId::new("resource-1");
+        assert_eq!(rid.to_string(), "resource-1");
     }
 
     #[test]

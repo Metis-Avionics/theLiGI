@@ -13,3 +13,4 @@ theligi-context = { path = "../context" }
 serde = { workspace = true, features = ["derive"] }
 thiserror = { workspace = true }
 serde_json = { workspace = true }
+themql-query = { path = "../../../theMQL/crates/themql-query", package = "themql-query" }

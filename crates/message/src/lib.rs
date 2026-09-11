@@ -1,11 +1,17 @@
 #![warn(missing_docs)]
 //! Message types for inter-component communication.
 //!
-//! Provides the envelope, event, command, and notification types
-//! used throughout theLIGI platform.
+//! Inherits the canonical message model from `themql-message` (theMQL),
+//! then adds theLiGI-specific envelope, event, command, and notification
+//! types used throughout the platform.
+
+pub use themql_message::{
+    CausationId, CorrelationId, Message as ThemqlMessage, MessageId, Metadata, Operation, Payload,
+    Subject,
+};
 
 use serde::{Deserialize, Serialize};
-use theligi_core::{CausationId, CorrelationId, ResourceIdentity, SchemaVersion};
+use theligi_core::SchemaVersion;
 
 /// A message envelope wrapping payload with metadata.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -41,15 +47,18 @@ impl<T> MessageEnvelope<T> {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Event {
     /// Identity of the event.
-    pub identity: ResourceIdentity,
+    pub identity: String,
     /// Event payload.
     pub payload: serde_json::Value,
 }
 
 impl Event {
     /// Create a new `Event`.
-    pub fn new(identity: ResourceIdentity, payload: serde_json::Value) -> Self {
-        Self { identity, payload }
+    pub fn new(identity: impl Into<String>, payload: serde_json::Value) -> Self {
+        Self {
+            identity: identity.into(),
+            payload,
+        }
     }
 }
 
@@ -57,9 +66,9 @@ impl Event {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Command {
     /// Identity of the command.
-    pub identity: ResourceIdentity,
+    pub identity: String,
     /// Target resource.
-    pub target: ResourceIdentity,
+    pub target: String,
     /// Command payload.
     pub payload: serde_json::Value,
 }
@@ -67,13 +76,13 @@ pub struct Command {
 impl Command {
     /// Create a new `Command`.
     pub fn new(
-        identity: ResourceIdentity,
-        target: ResourceIdentity,
+        identity: impl Into<String>,
+        target: impl Into<String>,
         payload: serde_json::Value,
     ) -> Self {
         Self {
-            identity,
-            target,
+            identity: identity.into(),
+            target: target.into(),
             payload,
         }
     }
@@ -83,15 +92,18 @@ impl Command {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Notification {
     /// Identity of the notification.
-    pub identity: ResourceIdentity,
+    pub identity: String,
     /// Notification payload.
     pub payload: serde_json::Value,
 }
 
 impl Notification {
     /// Create a new `Notification`.
-    pub fn new(identity: ResourceIdentity, payload: serde_json::Value) -> Self {
-        Self { identity, payload }
+    pub fn new(identity: impl Into<String>, payload: serde_json::Value) -> Self {
+        Self {
+            identity: identity.into(),
+            payload,
+        }
     }
 }
 

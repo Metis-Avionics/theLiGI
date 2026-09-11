@@ -11,3 +11,4 @@ crate-type = ["rlib"]
 theligi-core = { path = "../core" }
 serde = { workspace = true, features = ["derive"] }
 uuid = { workspace = true, features = ["v4", "serde"] }
+themql-schema = { path = "../../../theMQL/crates/themql-schema", package = "themql-schema" }
