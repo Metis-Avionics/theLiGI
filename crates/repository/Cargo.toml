@@ -9,9 +9,10 @@ uuid = { workspace = true, features = ["v4", "serde"] }
 thiserror = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
-tokio = { workspace = true, features = ["sync"] }
+tokio = { workspace = true }
 tracing = { workspace = true }
 async-trait = { workspace = true }
+dashmap = { workspace = true }
 daf-repository = { path = "../../../theDAF/crates/daf-repository", package = "daf-repository" }
 
 [lib]

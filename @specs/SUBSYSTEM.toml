@@ -168,6 +168,20 @@ invariants = [
     "no_hidden_mutation"
 ]
 
+[repository.concurrency]
+model = "dashmap"
+rationale = "read-heavy CAS lookup with occasional mutation; DashMap provides lock-free reads and sharded write locks"
+replace = ["Arc<tokio::sync::RwLock<HashMap<...>>>"]
+
+[repository.concurrency.requirements]
+no_global_locks = true
+sharded_writes = true
+lock_free_reads = true
+
+[repository.concurrency.forbidden]
+std_sync_mutex = true
+tokio_rwlock_on_shared_map = true
+
 # ============================================================
 # Cache
 # ============================================================
@@ -181,7 +195,8 @@ tiers = [
     "LRU",
     "Moka",
     "Redis",
-    "Sled"
+    "Sled",
+    "HelixDB"
 ]
 
 rules = [
@@ -191,6 +206,20 @@ rules = [
     "authorization_on_hit",
     "user_context_isolation"
 ]
+
+[cache.concurrency]
+model = "dashmap"
+rationale = "L1 ultra-hot tier is read-heavy; DashMap provides lock-free reads for concurrent request paths"
+replace = ["Arc<tokio::sync::RwLock<lru::LruCache<...>>>"]
+
+[cache.concurrency.requirements]
+no_global_locks = true
+sharded_writes = true
+lock_free_reads = true
+
+[cache.concurrency.forbidden]
+std_sync_mutex = true
+tokio_rwlock_on_shared_map = true
 
 # ============================================================
 # Authorization

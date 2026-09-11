@@ -1,7 +1,16 @@
+#![deny(warnings)]
+#![warn(clippy::pedantic)]
+#![warn(
+    clippy::unwrap_used,
+    clippy::expect_used,
+    clippy::panic,
+    clippy::missing_errors_doc
+)]
+
+use dashmap::DashMap;
 use std::collections::HashMap;
 use std::sync::Arc;
 use thiserror::Error;
-use tokio::sync::RwLock;
 use uuid::Uuid;
 
 /// Content-addressable storage identifier.
@@ -73,13 +82,14 @@ pub trait Repository: Send + Sync + 'static {
 /// In-memory repository implementation for testing and prototyping.
 #[derive(Debug, Default)]
 pub struct InMemoryRepository<T> {
-    entries: Arc<RwLock<HashMap<CasId, StoredEntry<T>>>>,
+    entries: Arc<DashMap<CasId, StoredEntry<T>>>,
 }
 
 impl<T> InMemoryRepository<T> {
+    #[must_use]
     pub fn new() -> Self {
         Self {
-            entries: Arc::new(RwLock::new(HashMap::new())),
+            entries: Arc::new(DashMap::new()),
         }
     }
 }
@@ -99,29 +109,26 @@ where
             data,
             metadata: HashMap::new(),
         };
-        self.entries.write().await.insert(id, entry);
+        self.entries.insert(id, entry);
         Ok(id)
     }
 
     async fn get(&self, id: CasId) -> Result<StoredEntry<Self::Data>, RepositoryError> {
-        let entries = self.entries.read().await;
-        entries
+        self.entries
             .get(&id)
-            .cloned()
+            .map(|entry| entry.clone())
             .ok_or(RepositoryError::NotFound(id))
     }
 
     async fn save(&self, entry: StoredEntry<Self::Data>) -> Result<Generation, RepositoryError> {
-        let mut entries = self.entries.write().await;
-        let next_generation = entry.generation + 1;
         let mut updated = entry;
-        updated.generation = next_generation;
-        entries.insert(updated.id, updated);
-        Ok(next_generation)
+        updated.generation += 1;
+        self.entries.insert(updated.id, updated.clone());
+        Ok(updated.generation)
     }
 
     async fn delete(&self, id: CasId) -> Result<(), RepositoryError> {
-        self.entries.write().await.remove(&id);
+        self.entries.remove(&id);
         Ok(())
     }
 
@@ -131,8 +138,10 @@ where
         generation: Generation,
         data: Self::Data,
     ) -> Result<Generation, RepositoryError> {
-        let mut entries = self.entries.write().await;
-        let entry = entries.get_mut(&id).ok_or(RepositoryError::NotFound(id))?;
+        let mut entry = self
+            .entries
+            .get_mut(&id)
+            .ok_or(RepositoryError::NotFound(id))?;
         if entry.generation != generation {
             return Err(RepositoryError::GenerationConflict {
                 expected: generation,
@@ -145,16 +154,18 @@ where
     }
 
     async fn try_delete(&self, id: CasId, generation: Generation) -> Result<(), RepositoryError> {
-        let entries = self.entries.read().await;
-        let entry = entries.get(&id).ok_or(RepositoryError::NotFound(id))?;
-        if entry.generation != generation {
+        let actual_generation = self
+            .entries
+            .get(&id)
+            .map(|entry| entry.generation)
+            .ok_or(RepositoryError::NotFound(id))?;
+        if actual_generation != generation {
             return Err(RepositoryError::GenerationConflict {
                 expected: generation,
-                actual: entry.generation,
+                actual: actual_generation,
             });
         }
-        drop(entries);
-        self.entries.write().await.remove(&id);
+        self.entries.remove(&id);
         Ok(())
     }
 }
@@ -164,12 +175,13 @@ mod tests {
     use super::*;
 
     #[tokio::test]
-    async fn create_and_get() {
+    async fn create_and_get() -> Result<(), RepositoryError> {
         let repo = InMemoryRepository::new();
-        let id = repo.create("hello".to_string()).await.unwrap();
-        let entry = repo.get(id).await.unwrap();
+        let id = repo.create("hello".to_string()).await?;
+        let entry = repo.get(id).await?;
         assert_eq!(entry.data, "hello");
         assert_eq!(entry.generation, 0);
+        Ok(())
     }
 
     #[tokio::test]
@@ -180,43 +192,47 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn save_increments_generation() {
+    async fn save_increments_generation() -> Result<(), RepositoryError> {
         let repo = InMemoryRepository::new();
-        let id = repo.create("v1".to_string()).await.unwrap();
-        let entry = repo.get(id).await.unwrap();
-        let new_gen = repo.save(entry).await.unwrap();
+        let id = repo.create("v1".to_string()).await?;
+        let entry = repo.get(id).await?;
+        let new_gen = repo.save(entry).await?;
         assert_eq!(new_gen, 1);
+        Ok(())
     }
 
     #[tokio::test]
-    async fn try_update_success() {
+    async fn try_update_success() -> Result<(), RepositoryError> {
         let repo = InMemoryRepository::new();
-        let id = repo.create("v1".to_string()).await.unwrap();
-        let entry = repo.get(id).await.unwrap();
-        let new_gen = repo.try_update(id, 0, "v2".to_string()).await.unwrap();
+        let id = repo.create("v1".to_string()).await?;
+        let _entry = repo.get(id).await?;
+        let new_gen = repo.try_update(id, 0, "v2".to_string()).await?;
         assert_eq!(new_gen, 1);
-        let updated = repo.get(id).await.unwrap();
+        let updated = repo.get(id).await?;
         assert_eq!(updated.data, "v2");
+        Ok(())
     }
 
     #[tokio::test]
-    async fn try_update_generation_conflict() {
+    async fn try_update_generation_conflict() -> Result<(), RepositoryError> {
         let repo = InMemoryRepository::new();
-        let id = repo.create("v1".to_string()).await.unwrap();
+        let id = repo.create("v1".to_string()).await?;
         let result = repo.try_update(id, 99, "v2".to_string()).await;
         assert!(matches!(
             result,
             Err(RepositoryError::GenerationConflict { .. })
         ));
+        Ok(())
     }
 
     #[tokio::test]
-    async fn try_delete_success() {
+    async fn try_delete_success() -> Result<(), RepositoryError> {
         let repo = InMemoryRepository::new();
-        let id = repo.create("v1".to_string()).await.unwrap();
-        let entry = repo.get(id).await.unwrap();
-        repo.try_delete(id, entry.generation).await.unwrap();
+        let id = repo.create("v1".to_string()).await?;
+        let entry = repo.get(id).await?;
+        repo.try_delete(id, entry.generation).await?;
         let result = repo.get(id).await;
         assert!(result.is_err());
+        Ok(())
     }
 }
