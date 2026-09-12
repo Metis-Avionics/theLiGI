@@ -18,7 +18,7 @@ Hierarchical data-access pipeline implementation (plan `.kilo/plans/178922641581
 
 - **`theligi-cache`**: added `CacheError::Unavailable(CacheTier)` and `Display` for `CacheTier`. `HierarchicalCacheWrapper` returns `Unavailable` for absent L0/L5; `ttl_seconds` intentionally discarded with a `tracing::debug!` note.
 - **`daf-cache`**: fixed `HierarchicalCache` to require L0 and L5 and propagate all tier errors with `?` (no more silent `tracing::warn!` fallthrough). `delete_prefix`, `clear`, `shake` aggregate across tiers and return error if any tier fails.
-- **`theligi-data-access`**: removed `OrchestrationPipeline` (unused architectural duplication). Rewrote `HierarchicalDataAccess<V>` as the canonical pipeline: generic over `V`, holds all components, implements `validate → authorize → cache_lookup → repository_lookup → algorithm → cache_population`. Added `From<daf_core::CacheError>` for `DataAccessError` and added `theligi-validation` + `daf-core` dependencies.
+- **`theligi-data-access`**: removed `OrchestrationPipeline` (unused architectural duplication). Rewrote `HierarchicalDataAccess<V>` as the canonical pipeline: generic over `V`, holds all components, implements `validate → authorize → cache_lookup → repository_lookup → algorithm → cache_population`. The validator is now actually invoked; `DataAccessError::Validation` converts from `theligi_validation::ValidationError`. Added `From<daf_core::CacheError>` for `DataAccessError` and added `theligi-validation` + `daf-core` dependencies.
 - **Tests**: 5 new in `data_access/src/lib.rs` (auth before cache, full pipeline miss→hit, cache-hit short-circuit, missing L0, missing L5); 2 new in `cache/src/lib.rs` (L0/L5 `Unavailable`).
 
 ### What is NOT done (follow-ups, not blockers)

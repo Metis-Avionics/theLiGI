@@ -43,7 +43,7 @@ cache and data-access layers. Converges `OrchestrationPipeline` and
   generic over `V: Send + Sync + Clone + 'static`.
   Holds `cache`, `repository`, `authorizer`, `algorithm`, `validator`.
 - `execute()` implements full pipeline:
-  1. validate (trace if validator configured)
+  1. validate (invokes `SeriesValidator`; failures return `DataAccessError::Validation`)
   2. authorize (mandatory, fail-closed)
   3. cache_lookup (L0→L1→L2→L3→L4→L5 via `daf_cache::HierarchicalCache::get`)
   4. repository_lookup (on full cache miss)

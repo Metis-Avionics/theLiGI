@@ -37,6 +37,12 @@ pub enum DataAccessError {
     NotFound,
 }
 
+impl From<theligi_validation::ValidationError> for DataAccessError {
+    fn from(e: theligi_validation::ValidationError) -> Self {
+        DataAccessError::Validation(e.to_string())
+    }
+}
+
 /// Data access pipeline orchestrator.
 #[async_trait::async_trait]
 pub trait DataAccess: Send + Sync + 'static {
@@ -112,8 +118,20 @@ where
         let cache_key = CacheKey::new(namespace, request.to_string());
         let key_str = format!("{}:{}", cache_key.namespace, cache_key.key);
 
-        if let Some(_validator) = &self.validator {
-            tracing::trace!(request = ?request, validator_kind = "SeriesValidator", "validate step");
+        if let Some(validator) = &self.validator {
+            let series_id: theligi_validation::SeriesId = request;
+            let result = validator.validate_series(series_id).await?;
+            if !result.passed {
+                let violations = result
+                    .violations
+                    .into_iter()
+                    .map(|v| v.message)
+                    .collect::<Vec<_>>()
+                    .join("; ");
+                return Err(DataAccessError::Validation(format!(
+                    "series {request} failed validation: {violations}"
+                )));
+            }
         }
 
         self.authorizer
@@ -171,17 +189,22 @@ mod tests {
     }
 
     #[derive(Default)]
-    struct NoopValidator;
+    struct FailingValidator;
 
     #[async_trait::async_trait]
-    impl SeriesValidator for NoopValidator {
+    impl SeriesValidator for FailingValidator {
         async fn validate_series(
             &self,
-            _series_id: theligi_validation::SeriesId,
+            series_id: theligi_validation::SeriesId,
         ) -> theligi_validation::ValidationResultType<theligi_validation::ValidationResult>
         {
-            Ok(theligi_validation::ValidationResult::ok(
-                theligi_validation::SeriesId::default(),
+            Ok(theligi_validation::ValidationResult::failed(
+                series_id,
+                vec![theligi_validation::Violation {
+                    rule: theligi_validation::ViolationRule::PostCount,
+                    message: "expected 6 posts".into(),
+                    severity: theligi_validation::Severity::Error,
+                }],
             ))
         }
 
@@ -277,6 +300,20 @@ mod tests {
             l4,
             Some(l5),
         ))
+    }
+
+    #[tokio::test]
+    async fn validation_enforced_before_authorization() {
+        let repo = Arc::new(InMemoryRepository::<String>::new());
+        let cache = make_cache();
+        let authorizer = Arc::new(theligi_authorization::BetterAuthProvider);
+        let validator = Arc::new(FailingValidator::default());
+        let pipeline = HierarchicalDataAccess::new(cache, repo, authorizer, None, Some(validator));
+
+        let context = isolated_context();
+        let request = uuid::Uuid::new_v4();
+        let result = pipeline.execute(&context, request).await;
+        assert!(matches!(result, Err(DataAccessError::Validation(_))));
     }
 
     #[tokio::test]
