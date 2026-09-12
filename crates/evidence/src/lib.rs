@@ -4,6 +4,15 @@
 //! to evidence nodes, tracks their provenance chain, and aggregates
 //! evidence weights for claims.
 
+#![deny(warnings)]
+#![warn(clippy::pedantic)]
+#![warn(
+    clippy::unwrap_used,
+    clippy::expect_used,
+    clippy::panic,
+    clippy::missing_errors_doc
+)]
+
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use uuid::Uuid;
@@ -84,6 +93,7 @@ impl Default for EvidenceScore {
 }
 
 impl EvidenceScore {
+    #[must_use]
     pub fn compute(credibility: f64, relevance: f64, recency: f64, consensus: f64) -> Self {
         let aggregate =
             (credibility * 0.35) + (relevance * 0.30) + (recency * 0.20) + (consensus * 0.15);

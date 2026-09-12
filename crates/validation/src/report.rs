@@ -1,7 +1,8 @@
-//! Validation report builder for theligi-validation.
+//! Validation report builder for `theligi-validation`.
 use crate::{ValidationReport, ValidationResult};
 
-/// Aggregate individual `ValidationResult`s into a `ValidationReport`.
+/// Aggregate individual [`ValidationResult`]s into a [`ValidationReport`].
+#[must_use]
 pub fn build_report(results: Vec<ValidationResult>) -> ValidationReport {
     let total = results.len();
     let passed = results.iter().filter(|r| r.passed).count();

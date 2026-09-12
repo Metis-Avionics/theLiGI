@@ -20,6 +20,7 @@ pub enum EvidenceHierarchy {
 
 impl EvidenceHierarchy {
     /// Minimum required hierarchy for a given transformation stage.
+    #[must_use]
     pub fn threshold_for_stage(stage: &str) -> Option<Self> {
         match stage {
             "evidence" | "mechanism" | "impact" => Some(Self::PrimarySource),
@@ -29,6 +30,7 @@ impl EvidenceHierarchy {
     }
 
     /// Numeric weight for aggregation.
+    #[must_use]
     pub fn weight(&self) -> f64 {
         match self {
             EvidenceHierarchy::PrimarySource => 1.0,
@@ -50,6 +52,7 @@ pub struct SufficiencyResult {
 
 /// Evaluate whether the collected evidence for a claim meets the
 /// sufficiency threshold for the given transformation stage.
+#[must_use]
 pub fn evaluate_sufficiency(
     stage: &str,
     evidence_hierarchies: &[EvidenceHierarchy],
@@ -61,7 +64,7 @@ pub fn evaluate_sufficiency(
         (None, _) => true,
         (Some(_), None) => false,
     };
-    let missing_threshold = if !sufficient { threshold } else { None };
+    let missing_threshold = if sufficient { None } else { threshold };
     SufficiencyResult {
         sufficient,
         highest_evidence: highest,
@@ -70,7 +73,7 @@ pub fn evaluate_sufficiency(
     }
 }
 
-/// Serializable wrapper around blake3::Hash.
+/// Serializable wrapper around `blake3::Hash`.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct LineageHash(pub Hash);
 
@@ -105,6 +108,7 @@ pub struct LineageLink {
 }
 
 /// Compute the blake3 hash of a byte slice.
+#[must_use]
 pub fn compute_hash(data: &[u8]) -> Hash {
     blake3::hash(data)
 }
@@ -121,11 +125,13 @@ pub fn chain_link(label: &'static str, data: &[u8], parent_hash: Option<Hash>) -
 }
 
 /// Verify that a lineage link's hash matches its data.
+#[must_use]
 pub fn verify_link(link: &LineageLink, data: &[u8]) -> bool {
     compute_hash(data) == link.hash.0
 }
 
 /// Verify the entire lineage chain from leaf to root.
+#[must_use]
 pub fn verify_chain(links: &[LineageLink], datas: &[&[u8]]) -> bool {
     if links.len() != datas.len() {
         return false;

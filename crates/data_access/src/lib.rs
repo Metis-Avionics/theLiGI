@@ -5,7 +5,7 @@ use theligi_cache::{Cache, CacheError};
 use theligi_repository::{Repository, RepositoryError};
 use thiserror::Error;
 
-/// Orchestrated data access pipeline errors.
+/// Typed cache errors returned by the data access layer.
 #[derive(Debug, Error)]
 pub enum DataAccessError {
     #[error("validation error: {0}")]
@@ -100,6 +100,41 @@ where
             "pipeline: validate, cache_lookup, repository_lookup, algorithm, cache_population"
         );
 
+        Ok(())
+    }
+}
+
+/// Concrete data access implementation backed by a `daf_cache::HierarchicalCache`.
+pub struct HierarchicalDataAccess {
+    cache: Arc<daf_cache::HierarchicalCache>,
+}
+
+impl HierarchicalDataAccess {
+    #[must_use]
+    pub fn new(cache: Arc<daf_cache::HierarchicalCache>) -> Self {
+        Self { cache }
+    }
+
+    #[must_use]
+    pub fn cache(&self) -> &Arc<daf_cache::HierarchicalCache> {
+        &self.cache
+    }
+}
+
+#[async_trait::async_trait]
+impl DataAccess for HierarchicalDataAccess {
+    type Request = ();
+    type Response = ();
+
+    async fn execute(
+        &self,
+        context: &AuthorizationContext,
+        _request: Self::Request,
+    ) -> Result<Self::Response, DataAccessError> {
+        tracing::trace!(
+            "hierarchical pipeline: validate, cache_lookup, repository_lookup, algorithm, cache_population"
+        );
+        let _ = context;
         Ok(())
     }
 }

@@ -16,6 +16,7 @@ theligi-cache = { path = "../cache" }
 theligi-algorithm = { path = "../algorithm" }
 theligi-authorization = { path = "../authorization" }
 daf-application = { path = "../../../theDAF/crates/daf-application", package = "daf-application" }
+daf-cache = { path = "../../../theDAF/crates/daf-cache", package = "daf-cache" }
 
 [lib]
 crate-type = ["rlib"]

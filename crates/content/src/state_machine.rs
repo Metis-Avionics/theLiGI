@@ -1,17 +1,17 @@
-//! Content series state machine for theligi-content.
+//! Content series state machine for `theligi-content`.
 //!
 //! Enforces the discrete series lifecycle:
-//!   draft -> publishing -> published -> completed
+//!   `Draft` -> `Publishing` -> `Published` -> `Completed`
 //!
 //! Guards:
-//! - publish: exactly 6 posts, shared topic/thesis lock, causal DAG valid
-//! - complete: all posts published, evidence present
-//! - revert_to_draft: publish guard fails
+//! - `publish`: exactly 6 posts, shared topic/thesis lock, causal DAG valid
+//! - `complete`: all posts published, evidence present
+//! - `revert_to_draft`: publish guard fails
 
 use crate::{ContentError, ContentNodeId, ContentResult, ContentSeries};
 use serde::{Deserialize, Serialize};
 
-/// Lifecycle states for a ContentSeries.
+/// Lifecycle states for a [`ContentSeries`].
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum SeriesState {
@@ -52,7 +52,7 @@ impl std::fmt::Display for TransitionError {
 
 impl std::error::Error for TransitionError {}
 
-/// State machine for ContentSeries lifecycle.
+/// State machine for [`ContentSeries`] lifecycle.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SeriesStateMachine {
     state: SeriesState,
@@ -60,6 +60,7 @@ pub struct SeriesStateMachine {
 }
 
 impl SeriesStateMachine {
+    #[must_use]
     pub fn new(series_id: ContentNodeId) -> Self {
         Self {
             state: SeriesState::Draft,
@@ -67,15 +68,23 @@ impl SeriesStateMachine {
         }
     }
 
+    #[must_use]
     pub fn current_state(&self) -> SeriesState {
         self.state
     }
 
+    #[must_use]
     pub fn series_id(&self) -> ContentNodeId {
         self.series_id
     }
 
     /// Attempt to transition to `Publishing`.
+    ///
+    /// # Errors
+    ///
+    /// Returns `ContentError::SeriesInvariant` if the transition is invalid,
+    /// the post count is not 6, the topic lock is violated, or the thesis
+    /// lock is violated.
     pub fn try_publish(&mut self, series: &ContentSeries) -> ContentResult<()> {
         if self.state != SeriesState::Draft {
             return Err(ContentError::SeriesInvariant(
@@ -107,6 +116,11 @@ impl SeriesStateMachine {
     }
 
     /// Attempt to transition to `Published`.
+    ///
+    /// # Errors
+    ///
+    /// Returns `ContentError::SeriesInvariant` if the transition is invalid,
+    /// not all posts are published, or evidence is missing.
     pub fn try_complete(&mut self, all_published: bool, has_evidence: bool) -> ContentResult<()> {
         if self.state != SeriesState::Publishing {
             return Err(ContentError::SeriesInvariant(
@@ -128,6 +142,11 @@ impl SeriesStateMachine {
     }
 
     /// Revert to draft (only valid from Publishing).
+    ///
+    /// # Errors
+    ///
+    /// Returns `ContentError::SeriesInvariant` if the current state is not
+    /// `Publishing`.
     pub fn revert_to_draft(&mut self) -> ContentResult<()> {
         if self.state != SeriesState::Publishing {
             return Err(ContentError::SeriesInvariant(
@@ -158,6 +177,11 @@ impl Default for TopicStreamContract {
 }
 
 /// Validate that a topic stream edge does not violate append-only semantics.
+///
+/// # Errors
+///
+/// Returns `ContentError::Edge` if the edge timestamp is older than the
+/// latest timestamp and the append-only contract is enforced.
 pub fn validate_stream_edge(
     contract: &TopicStreamContract,
     edge_timestamp_ms: i64,
