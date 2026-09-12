@@ -1,7 +1,6 @@
-use std::collections::HashMap;
+use dashmap::DashMap;
 use std::sync::Arc;
 use thiserror::Error;
-use tokio::sync::RwLock;
 
 /// Cache tier levels from fastest/most local to slowest/most distributed.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
@@ -83,13 +82,13 @@ pub trait Cache: Send + Sync + 'static {
 /// In-memory cache implementation for testing.
 #[derive(Debug, Default)]
 pub struct InMemoryCache<V> {
-    tiers: Arc<RwLock<HashMap<(CacheKey, CacheTier), CacheEntry<V>>>>,
+    tiers: Arc<DashMap<(CacheKey, CacheTier), CacheEntry<V>>>,
 }
 
 impl<V> InMemoryCache<V> {
     pub fn new() -> Self {
         Self {
-            tiers: Arc::new(RwLock::new(HashMap::new())),
+            tiers: Arc::new(DashMap::new()),
         }
     }
 }
@@ -106,8 +105,8 @@ where
         key: &CacheKey,
         tier: CacheTier,
     ) -> Result<Option<Self::Value>, CacheError> {
-        let tiers = self.tiers.read().await;
-        Ok(tiers
+        Ok(self
+            .tiers
             .get(&(key.clone(), tier))
             .map(|entry| entry.value.clone()))
     }
@@ -119,7 +118,7 @@ where
         tier: CacheTier,
         ttl_seconds: Option<u64>,
     ) -> Result<(), CacheError> {
-        self.tiers.write().await.insert(
+        self.tiers.insert(
             (key, tier),
             CacheEntry {
                 value,
@@ -131,22 +130,165 @@ where
     }
 
     async fn delete(&self, key: &CacheKey, tier: CacheTier) -> Result<(), CacheError> {
-        self.tiers.write().await.remove(&(key.clone(), tier));
+        self.tiers.remove(&(key.clone(), tier));
         Ok(())
     }
 
     async fn delete_prefix(&self, prefix: &str) -> Result<u64, CacheError> {
-        let mut tiers = self.tiers.write().await;
-        let initial = tiers.len();
-        tiers.retain(|key, _| {
-            !key.0.namespace.starts_with(prefix) && !key.0.key.starts_with(prefix)
-        });
-        Ok((initial - tiers.len()) as u64)
+        let keys_to_remove: Vec<(CacheKey, CacheTier)> = self
+            .tiers
+            .iter()
+            .filter(|entry| {
+                entry.key().0.namespace.starts_with(prefix) || entry.key().0.key.starts_with(prefix)
+            })
+            .map(|entry| entry.key().clone())
+            .collect();
+        for key in &keys_to_remove {
+            self.tiers.remove(key);
+        }
+        Ok(keys_to_remove.len() as u64)
     }
 
     async fn clear(&self, _tier: Option<CacheTier>) -> Result<(), CacheError> {
-        self.tiers.write().await.clear();
+        self.tiers.clear();
         Ok(())
+    }
+}
+
+use async_trait::async_trait;
+use daf_cache::HierarchicalCache;
+use daf_core::Cache as DafCache;
+
+/// Adapter that wraps a `daf_cache::HierarchicalCache` and implements
+/// `theligi_cache::Cache`, routing tier-aware operations to the appropriate
+/// underlying tier.
+#[derive(Debug, Clone)]
+pub struct HierarchicalCacheWrapper<V> {
+    inner: HierarchicalCache,
+    _marker: std::marker::PhantomData<V>,
+}
+
+impl<V> HierarchicalCacheWrapper<V> {
+    #[must_use]
+    pub fn new(
+        l0: Option<Arc<dyn DafCache>>,
+        l1: Arc<dyn DafCache>,
+        l2: Arc<dyn DafCache>,
+        l3: Arc<dyn DafCache>,
+        l4: Arc<dyn DafCache>,
+        l5: Option<Arc<dyn DafCache>>,
+    ) -> Self {
+        Self {
+            inner: HierarchicalCache::new(l0, l1, l2, l3, l4, l5),
+            _marker: std::marker::PhantomData,
+        }
+    }
+
+    #[must_use]
+    pub fn inner(&self) -> &HierarchicalCache {
+        &self.inner
+    }
+}
+
+#[async_trait]
+impl<V> Cache for HierarchicalCacheWrapper<V>
+where
+    V: std::any::Any + Send + Sync + Clone + 'static,
+{
+    type Value = V;
+
+    async fn get(
+        &self,
+        key: &CacheKey,
+        tier: CacheTier,
+    ) -> Result<Option<Self::Value>, CacheError> {
+        let key_str = format!("{}:{}", key.namespace, key.key);
+        let entry = match tier {
+            CacheTier::L0 => self.inner.l0().unwrap().get(&key_str).await?,
+            CacheTier::L1 => self.inner.l1().get(&key_str).await?,
+            CacheTier::L2 => self.inner.l2().get(&key_str).await?,
+            CacheTier::L3 => self.inner.l3().get(&key_str).await?,
+            CacheTier::L4 => self.inner.l4().get(&key_str).await?,
+            CacheTier::L5 => {
+                self.inner
+                    .l5()
+                    .map_or(self.inner.l4(), |l5| l5)
+                    .get(&key_str)
+                    .await?
+            }
+        };
+        match entry {
+            Some(e) => {
+                let arc = e.value.downcast::<V>().map_err(|_| {
+                    CacheError::Internal(format!(
+                        "type mismatch in cache; expected {}",
+                        std::any::type_name::<V>()
+                    ))
+                })?;
+                Ok(Some((*arc).clone()))
+            }
+            None => Ok(None),
+        }
+    }
+
+    async fn set(
+        &self,
+        key: CacheKey,
+        value: Self::Value,
+        tier: CacheTier,
+        _ttl_seconds: Option<u64>,
+    ) -> Result<(), CacheError> {
+        let key_str = format!("{}:{}", key.namespace, key.key);
+        let any: Arc<dyn std::any::Any + Send + Sync> = Arc::new(value);
+        match tier {
+            CacheTier::L0 => self.inner.l0().unwrap().set(key_str, any).await?,
+            CacheTier::L1 => self.inner.l1().set(key_str, any).await?,
+            CacheTier::L2 => self.inner.l2().set(key_str, any).await?,
+            CacheTier::L3 => self.inner.l3().set(key_str, any).await?,
+            CacheTier::L4 => self.inner.l4().set(key_str, any).await?,
+            CacheTier::L5 => {
+                if let Some(l5) = self.inner.l5() {
+                    l5.set(key_str, any).await?;
+                } else {
+                    self.inner.l1().set(key_str, any).await?;
+                }
+            }
+        }
+        Ok(())
+    }
+
+    async fn delete(&self, key: &CacheKey, tier: CacheTier) -> Result<(), CacheError> {
+        let key_str = format!("{}:{}", key.namespace, key.key);
+        match tier {
+            CacheTier::L0 => self.inner.l0().unwrap().delete(&key_str).await?,
+            CacheTier::L1 => self.inner.l1().delete(&key_str).await?,
+            CacheTier::L2 => self.inner.l2().delete(&key_str).await?,
+            CacheTier::L3 => self.inner.l3().delete(&key_str).await?,
+            CacheTier::L4 => self.inner.l4().delete(&key_str).await?,
+            CacheTier::L5 => {
+                if let Some(l5) = self.inner.l5() {
+                    l5.delete(&key_str).await?;
+                } else {
+                    self.inner.l1().delete(&key_str).await?;
+                }
+            }
+        }
+        Ok(())
+    }
+
+    async fn delete_prefix(&self, prefix: &str) -> Result<u64, CacheError> {
+        Ok(DafCache::delete_prefix(&self.inner, prefix).await?)
+    }
+
+    async fn clear(&self, _tier: Option<CacheTier>) -> Result<(), CacheError> {
+        DafCache::clear(&self.inner).await?;
+        Ok(())
+    }
+}
+
+impl From<daf_core::CacheError> for CacheError {
+    fn from(e: daf_core::CacheError) -> Self {
+        CacheError::Internal(e.to_string())
     }
 }
 
@@ -204,5 +346,26 @@ mod tests {
             .unwrap();
         let deleted = cache.delete_prefix("a:").await.unwrap();
         assert_eq!(deleted, 2);
+    }
+
+    #[tokio::test]
+    async fn hierarchical_wrapper_set_get_round_trip() {
+        let l1 = Arc::new(daf_cache::MemoryCache::new(1024)) as Arc<dyn DafCache>;
+        let l2 = Arc::new(daf_cache::MokaCache::new(1024)) as Arc<dyn DafCache>;
+        let cache = HierarchicalCacheWrapper::<String>::new(
+            None,
+            l1.clone(),
+            l2,
+            l1.clone(),
+            l1.clone(),
+            None,
+        );
+        let key = CacheKey::new("ns", "key");
+        cache
+            .set(key.clone(), "value".to_string(), CacheTier::L1, None)
+            .await
+            .unwrap();
+        let result: Option<String> = cache.get(&key, CacheTier::L1).await.unwrap();
+        assert_eq!(result, Some("value".to_string()));
     }
 }
