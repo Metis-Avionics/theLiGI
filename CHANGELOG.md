@@ -5,6 +5,26 @@ Update after every turn.
 
 ## [Unreleased]
 
+### 2026-09-12 — PR #4 review fixes (cache write policy + error conversion)
+
+Addresses review feedback on PR #4 head:
+
+#### theligi-data-access
+
+- **Fixed cache write policy**: `HierarchicalDataAccess::execute()` now writes to L1
+  only via `self.cache.l1().set(...)` instead of `self.cache.set(...)`.
+  `daf_cache::HierarchicalCache::set()` propagates writes to L0 + L1, which
+  contradicted the declared L1-only write policy in the plan.
+- `namespace` is computed once in `new()` via `type_name::<V>()` and stored as a
+  field, rather than recomputed on every `execute()` call. This makes the
+  namespace explicit and overridable without changing the public API.
+
+#### theligi-cache
+
+- Improved `From<daf_core::CacheError>` for `CacheError` to match on the inner
+  `String` directly (`e.0`) instead of round-tripping through `Display` and
+  parsing the rendered string. Preserves full error text for unknown cases.
+
 ### 2026-09-12 — Hierarchical data-access pipeline (fail-closed)
 
 Executed plan `.kilo/plans/1789226415812-hierarchical-pipeline-implementation.md`.

@@ -71,6 +71,7 @@ where
     authorizer: Arc<dyn AuthorizationProvider>,
     algorithm: Option<Arc<dyn Algorithm<Input = V, Output = V>>>,
     validator: Option<Arc<dyn SeriesValidator>>,
+    namespace: String,
 }
 
 impl<V> HierarchicalDataAccess<V>
@@ -91,6 +92,7 @@ where
             authorizer,
             algorithm,
             validator,
+            namespace: type_name::<V>().to_string(),
         }
     }
 
@@ -118,8 +120,7 @@ where
         context: &AuthorizationContext,
         request: Self::Request,
     ) -> Result<Self::Response, DataAccessError> {
-        let namespace = type_name::<V>().to_string();
-        let cache_key = CacheKey::new(namespace, request.to_string());
+        let cache_key = CacheKey::new(self.namespace.clone(), request.to_string());
         let key_str = format!("{}:{}", cache_key.namespace, cache_key.key);
 
         if let Some(validator) = &self.validator {
@@ -161,7 +162,7 @@ where
         }
 
         let any: Arc<dyn std::any::Any + Send + Sync> = Arc::new(value.clone());
-        self.cache.set(key_str, any).await?;
+        self.cache.l1().set(key_str, any).await?;
 
         Ok(Ok(value))
     }

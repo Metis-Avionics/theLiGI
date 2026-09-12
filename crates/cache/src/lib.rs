@@ -340,18 +340,11 @@ where
 
 impl From<daf_core::CacheError> for CacheError {
     fn from(e: daf_core::CacheError) -> Self {
-        let msg = e.to_string();
-        if let Some(tier_str) = msg.strip_prefix("cache error: ").and_then(|s| {
-            s.strip_prefix("L0 cache tier is not configured")
-                .map(|_| CacheTier::L0)
-                .or_else(|| {
-                    s.strip_prefix("L5 cache tier is not configured")
-                        .map(|_| CacheTier::L5)
-                })
-        }) {
-            return CacheError::Unavailable(tier_str);
+        match e.0.as_str() {
+            "L0 cache tier is not configured" => CacheError::Unavailable(CacheTier::L0),
+            "L5 cache tier is not configured" => CacheError::Unavailable(CacheTier::L5),
+            _ => CacheError::Internal(e.to_string()),
         }
-        CacheError::Internal(msg)
     }
 }
 

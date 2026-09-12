@@ -7,7 +7,7 @@ Handover notes for the next agent/session. Fold in-flight items from
 
 ### Repository state
 
-- Branch: `feat/l0-l5-hierarchical-cache-pipeline` (head at `1160150`).
+- Branch: `feat/l0-l5-hierarchical-cache-pipeline` (head at `a6c81a1`).
 - Working tree has uncommitted changes: `SESSION.md`, `CHANGELOG.md`,
   `HANDOVER.md`, `crates/data_access/src/lib.rs`, `crates/cache/src/lib.rs`.
 - theDAF pinned at `37d54d78f6e7d1e3baf73db4c2daa00e78266422`.
@@ -15,11 +15,18 @@ Handover notes for the next agent/session. Fold in-flight items from
 
 ### Completed this turn
 
-- **Dependency graph deduplication**: all remaining theDAF deps now
-  use the immutable git revision. `Cargo.lock` has exactly one entry
-  each for `daf-core` and `daf-cache`.
+- **Cache write policy fix (BLOCKING)**: `HierarchicalDataAccess::execute()`
+  now writes to L1 only via `self.cache.l1().set(...)`. Previously called
+  `self.cache.set(...)` which writes to L0 + L1, contradicting the plan.
+- **Namespace stability**: `type_name::<V>()` computed once in `new()` and
+  stored as a field rather than recomputed per `execute()` call.
+- **Error conversion improvement**: `From<daf_core::CacheError>` matches on
+  the inner `String` directly instead of round-tripping through `Display`.
+- **Dependency graph deduplication**: all theDAF deps use the immutable git
+  revision. `Cargo.lock` has exactly one entry each for `daf-core` and
+  `daf-cache`.
 - **Validation-order instrumentation**: `validation_enforced_before_authorization`
-  now uses `RecordingAuthorizer` to prove authorizer was not called.
+  uses `RecordingAuthorizer` to prove authorizer was not called.
 - **TTL contract**: documented explicit no-op for `HierarchicalCacheWrapper`;
   added `hierarchical_wrapper_set_ttl_is_noop` test.
 
