@@ -27,15 +27,17 @@ Post-review fixups for PR #4 (head `a6c81a1`):
 ## State of the repository
 
 - `main` at `1659f8b`.
-- Branch head at `a6c81a1` with uncommitted changes to `SESSION.md`,
+- Branch head at `3ed314c` (pushed to `origin/feat/l0-l5-hierarchical-cache-pipeline`).
+- Uncommitted changes now staged and committed: `SESSION.md`,
   `CHANGELOG.md`, `HANDOVER.md`, `crates/data_access/src/lib.rs`,
   `crates/cache/src/lib.rs`.
 - theDAF pinned at `37d54d78f6e7d1e3baf73db4c2daa00e78266422`.
 - All validation gates pass.
+- PR #4 updated with review-fix comment.
 
 ## In-flight work
 
-- Ready to commit remaining review fixes and push to PR #4.
+- PR #4 review fixes committed and pushed. Awaiting reviewer response.
 
 ## Open questions / blockers
 

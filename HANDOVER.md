@@ -7,11 +7,11 @@ Handover notes for the next agent/session. Fold in-flight items from
 
 ### Repository state
 
-- Branch: `feat/l0-l5-hierarchical-cache-pipeline` (head at `a6c81a1`).
-- Working tree has uncommitted changes: `SESSION.md`, `CHANGELOG.md`,
-  `HANDOVER.md`, `crates/data_access/src/lib.rs`, `crates/cache/src/lib.rs`.
+- Branch: `feat/l0-l5-hierarchical-cache-pipeline` (head at `3ed314c`, pushed).
+- Working tree clean after commit.
 - theDAF pinned at `37d54d78f6e7d1e3baf73db4c2daa00e78266422`.
 - All validation gates pass.
+- PR #4 updated with review-fix summary comment.
 
 ### Completed this turn
 
