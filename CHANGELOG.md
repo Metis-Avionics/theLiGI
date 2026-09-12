@@ -5,6 +5,23 @@ Update after every turn.
 
 ## [Unreleased]
 
+### 2026-09-12 — Reconcile PR #4 with `main` (rebase)
+
+Rebased `feat/l0-l5-hierarchical-cache-pipeline` onto `origin/main` (`d553803`).
+
+- Local `main` synced from `6e7afef` to `d553803`.
+- Clean rebase: 9 review-fix commits rebased; no conflicts.
+- Branch head moved from `61b20fa` to `5087790`.
+- Remote URL updated to `https://github.com/Metis-Avionics/theLiGI.git`.
+- PR #4 base now matches current `main`.
+
+#### Validation
+
+- `cargo fmt --check` — clean.
+- `cargo check --workspace` — clean.
+- `cargo clippy --workspace` — clean.
+- `cargo test --workspace` — all crates pass (workspace-wide green).
+
 ### 2026-09-12 — Cache context isolation (PR #4)
 
 Fixes cross-tenant cache key collision in `HierarchicalDataAccess::execute()`.
