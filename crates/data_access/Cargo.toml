@@ -15,8 +15,13 @@ theligi-repository = { path = "../repository" }
 theligi-cache = { path = "../cache" }
 theligi-algorithm = { path = "../algorithm" }
 theligi-authorization = { path = "../authorization" }
+theligi-validation = { path = "../validation" }
+daf-core = { path = "../../../theDAF/crates/daf-core", package = "daf-core" }
 daf-application = { path = "../../../theDAF/crates/daf-application", package = "daf-application" }
 daf-cache = { path = "../../../theDAF/crates/daf-cache", package = "daf-cache" }
 
 [lib]
 crate-type = ["rlib"]
+
+[dev-dependencies]
+theligi-content = { path = "../content" }
