@@ -8,9 +8,8 @@ Handover notes for the next agent/session. Fold in-flight items from
 ### Repository state at handover
 
 - Branch: `feat/l0-l5-hierarchical-cache-pipeline` (off `main` at `1659f8b`).
-- Working tree has uncommitted changes: `Cargo.lock`, `Cargo.toml`,
-  `crates/cache/Cargo.toml`, `crates/core/Cargo.toml`,
-  `crates/data_access/Cargo.toml`, `crates/data_access/src/lib.rs`.
+ - Working tree has uncommitted changes: `Cargo.lock`, `Cargo.toml`,
+   `crates/cache/src/lib.rs`, `crates/data_access/src/lib.rs`.
 - theDAF `feat/l0-l5-hierarchical-cache` at commit `37d54d7`
   (`feat: enforce fail-closed semantics for L0/L5 tiers`).
 - All validation gates pass: `cargo fmt --check`, `cargo check
@@ -24,14 +23,20 @@ Post-review fixups for PR #4 (head `1659f8b`):
 - **theDAF**: committed and pushed fail-closed `HierarchicalCache`
   changes to branch `feat/l0-l5-hierarchical-cache` (`37d54d7`).
   Local uncommitted changes are no longer an implicit dependency.
-- **theLiGI dependency pinning**: `daf-cache` and `daf-core` are now
-  git-pinned to theDAF `feat/l0-l5-hierarchical-cache` branch. Other
-  theDAF crates remain path dependencies.
-- **Test hardening**: `missing_l0_returns_error` and
-  `missing_l5_returns_error` assert exact error messages instead of
-  generic `is_err()`.
-- **`Cargo.lock` regenerated** to remove duplicate local `daf-cache`
-  entry.
+ - **theLiGI dependency pinning**: `daf-cache` and `daf-core` are now
+   git-pinned to theDAF `feat/l0-l5-hierarchical-cache` at immutable
+   commit `37d54d78f6e7d1e3baf73db4c2daa00e78266422`. Other theDAF
+   crates remain path dependencies.
+ - **Cache error conversion**: `From<daf_core::CacheError>` for
+   `theligi-cache::CacheError` now parses theDAF tier-unavailability
+   messages and maps them to typed `CacheError::Unavailable(CacheTier)`
+   variants, preserving fail-closed semantics across the boundary.
+ - **Test hardening**: `missing_l0_returns_error` and
+   `missing_l5_returns_error` use typed `matches!` assertions against
+   `DataAccessError::Cache(CacheError::Unavailable(CacheTier::L0/L5))`
+   instead of matching rendered error strings.
+ - **`Cargo.lock` regenerated** to remove duplicate local `daf-cache`
+   entry.
 
 ### What is NOT done (follow-ups, not blockers)
 

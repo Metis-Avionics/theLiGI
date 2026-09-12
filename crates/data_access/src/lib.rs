@@ -2,6 +2,8 @@ use std::any::type_name;
 use std::sync::Arc;
 use theligi_algorithm::{Algorithm, AlgorithmError};
 use theligi_authorization::{AuthorizationContext, AuthorizationError, AuthorizationProvider};
+#[cfg(test)]
+use theligi_cache::CacheTier;
 use theligi_cache::{CacheError, CacheKey};
 use theligi_repository::{CasId, Repository, RepositoryError, StoredEntry};
 use theligi_validation::SeriesValidator;
@@ -408,12 +410,12 @@ mod tests {
         let context = isolated_context();
         let request = uuid::Uuid::new_v4();
         let result = pipeline.execute(&context, request).await;
-        assert!(result.is_err());
-        let err = result.unwrap_err();
-        assert!(
-            format!("{err}").contains("L0 cache tier is not configured"),
-            "unexpected error: {err}"
-        );
+        assert!(matches!(
+            result,
+            Err(DataAccessError::Cache(CacheError::Unavailable(
+                CacheTier::L0
+            )))
+        ));
     }
 
     #[tokio::test]
@@ -438,11 +440,11 @@ mod tests {
         let context = isolated_context();
         let request = uuid::Uuid::new_v4();
         let result = pipeline.execute(&context, request).await;
-        assert!(result.is_err());
-        let err = result.unwrap_err();
-        assert!(
-            format!("{err}").contains("L5 cache tier is not configured"),
-            "unexpected error: {err}"
-        );
+        assert!(matches!(
+            result,
+            Err(DataAccessError::Cache(CacheError::Unavailable(
+                CacheTier::L5
+            )))
+        ));
     }
 }

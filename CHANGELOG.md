@@ -79,26 +79,27 @@ Post-review fixups for PR #4 head `1659f8b`:
 
 #### theLiGI dependency pinning
 
-- Replaced local `theDAF` path dependencies for `daf-cache` and
-  `daf-core` with git dependencies on
-  `https://github.com/RAliane-REBORN/theDAF.git`
-  `branch = "feat/l0-l5-hierarchical-cache"`.
-- Other theDAF crates (`daf-repository`, `daf-algorithms`,
-  `daf-runtime`, `daf-messaging`, `daf-http`, `daf-application`)
-  remain as path dependencies.
-- Removed redundant `package` keys from crate manifests; workspace
-  deduplication in root `Cargo.toml` handles aliasing.
-- Regenerated `Cargo.lock` to remove duplicate local `daf-cache`
-  entry.
+ - Replaced local `theDAF` path dependencies for `daf-cache` and
+   `daf-core` with git dependencies on
+   `https://github.com/RAliane-REBORN/theDAF.git`
+   `rev = "37d54d78f6e7d1e3baf73db4c2daa00e78266422"`.
+ - Other theDAF crates (`daf-repository`, `daf-algorithms`,
+   `daf-runtime`, `daf-messaging`, `daf-http`, `daf-application`)
+   remain as path dependencies.
+ - Removed redundant `package` keys from crate manifests; workspace
+   deduplication in root `Cargo.toml` handles aliasing.
+ - Regenerated `Cargo.lock` to remove duplicate local `daf-cache`
+   entry.
+ - Improved `From<daf_core::CacheError>` for `theligi-cache::CacheError`
+   to parse theDAF tier-unavailability messages and map them to typed
+   `CacheError::Unavailable(CacheTier::L0/L5)` variants.
 
 #### Test hardening
 
-- `missing_l0_returns_error` asserts exact message
-  `"L0 cache tier is not configured"` instead of generic
-  `result.is_err()`.
-- `missing_l5_returns_error` asserts exact message
-  `"L5 cache tier is not configured"` instead of generic
-  `result.is_err()`.
+ - `missing_l0_returns_error` and `missing_l5_returns_error` now use
+   typed `matches!` assertions against
+   `DataAccessError::Cache(CacheError::Unavailable(CacheTier::L0/L5))`
+   instead of matching rendered error strings.
 
 #### Validation
 

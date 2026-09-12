@@ -18,19 +18,23 @@ Post-review fixups for PR #4 (head `1659f8b`):
   fail-closed `HierarchicalCache` changes to theDAF branch
   `feat/l0-l5-hierarchical-cache` (commit `37d54d7`). TheDAF local
   uncommitted changes are no longer an implicit dependency.
-- **2. theLiGI dependency pinning**: replaced local `theDAF` path
-  dependencies with git dependencies on
-  `https://github.com/RAliane-REBORN/theDAF.git`
-  `branch = "feat/l0-l5-hierarchical-cache"` for `daf-cache` and
-  `daf-core`. Other theDAF crates remain path dependencies.
-  Workspace-level deduplication in `Cargo.toml` removes redundant
-  `package` keys from crate manifests.
-- **3. Missing-tier tests strengthened**: `missing_l0_returns_error` and
-  `missing_l5_returns_error` now assert the exact error message
-  (`"L0 cache tier is not configured"` / `"L5 cache tier is not
-  configured"`) instead of generic `result.is_err()`.
-- **4. `Cargo.lock` regenerated** after removing the duplicate local
-  `daf-cache` entry that was shadowing the git-pinned package.
+ - **2. theLiGI dependency pinning**: replaced local `theDAF` path
+   dependencies with git dependencies on
+   `https://github.com/RAliane-REBORN/theDAF.git`
+   `rev = "37d54d78f6e7d1e3baf73db4c2daa00e78266422"` for `daf-cache` and
+   `daf-core`. Other theDAF crates remain path dependencies.
+   Workspace-level deduplication in `Cargo.toml` removes redundant
+   `package` keys from crate manifests.
+ - **3. Cache error conversion**: `From<daf_core::CacheError>` for
+   `theligi-cache::CacheError` now parses theDAF's tier-unavailability
+   strings and maps them back to typed `CacheError::Unavailable(CacheTier)`
+   variants, preserving fail-closed semantics across the boundary.
+ - **4. Missing-tier tests strengthened**: `missing_l0_returns_error` and
+   `missing_l5_returns_error` now use typed `matches!` assertions against
+   `DataAccessError::Cache(CacheError::Unavailable(CacheTier::L0/L5))`
+   instead of matching rendered error strings.
+ - **5. `Cargo.lock` regenerated** after removing the duplicate local
+   `daf-cache` entry that was shadowing the git-pinned package.
 
 ## State of the repository
 

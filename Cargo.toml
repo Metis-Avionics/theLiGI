@@ -76,9 +76,9 @@ themql-telemetry = { path = "../theMQL/crates/themql-telemetry", package = "them
 themql-artifact = { path = "../theMQL/crates/themql-artifact", package = "themql-artifact" }
 themql-schema = { path = "../theMQL/crates/themql-schema", package = "themql-schema" }
 
-daf-core = { git = "https://github.com/RAliane-REBORN/theDAF.git", branch = "feat/l0-l5-hierarchical-cache", package = "daf-core" }
+daf-core = { git = "https://github.com/RAliane-REBORN/theDAF.git", rev = "37d54d78f6e7d1e3baf73db4c2daa00e78266422", package = "daf-core" }
 daf-repository = { path = "../theDAF/crates/daf-repository", package = "daf-repository" }
-daf-cache = { git = "https://github.com/RAliane-REBORN/theDAF.git", branch = "feat/l0-l5-hierarchical-cache", package = "daf-cache" }
+daf-cache = { git = "https://github.com/RAliane-REBORN/theDAF.git", rev = "37d54d78f6e7d1e3baf73db4c2daa00e78266422", package = "daf-cache" }
 daf-algorithms = { path = "../theDAF/crates/daf-algorithms", package = "daf-algorithms" }
 daf-runtime = { path = "../theDAF/crates/daf-runtime", package = "daf-runtime" }
 daf-messaging = { path = "../theDAF/crates/daf-messaging", package = "daf-messaging" }
