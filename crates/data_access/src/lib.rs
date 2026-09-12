@@ -4,9 +4,9 @@ use theligi_algorithm::{Algorithm, AlgorithmError};
 #[cfg(test)]
 use theligi_authorization::AuthorizationDecision;
 use theligi_authorization::{AuthorizationContext, AuthorizationError, AuthorizationProvider};
+use theligi_cache::CacheError;
 #[cfg(test)]
 use theligi_cache::CacheTier;
-use theligi_cache::{CacheError, CacheKey};
 use theligi_repository::{CasId, Repository, RepositoryError, StoredEntry};
 use theligi_validation::SeriesValidator;
 use thiserror::Error;
@@ -120,8 +120,19 @@ where
         context: &AuthorizationContext,
         request: Self::Request,
     ) -> Result<Self::Response, DataAccessError> {
-        let cache_key = CacheKey::new(self.namespace.clone(), request.to_string());
-        let key_str = format!("{}:{}", cache_key.namespace, cache_key.key);
+        let tenant_id = context
+            .tenant_id
+            .map(|id| id.to_string())
+            .unwrap_or_default();
+        let session_id = context
+            .session_id
+            .map(|id| id.to_string())
+            .unwrap_or_default();
+        let subject = context.claims.get("sub").map_or("", |s| s.as_str());
+        let key_str = format!(
+            "{}:{}:{}:{}:{}",
+            self.namespace, tenant_id, session_id, subject, request
+        );
 
         if let Some(validator) = &self.validator {
             let series_id: theligi_validation::SeriesId = request;
@@ -145,6 +156,9 @@ where
 
         let cached = self.cache.get(&key_str).await?;
         if let Some(entry) = cached {
+            self.authorizer
+                .authorize(context, "data_access", "execute")
+                .await?;
             let value = entry.value.downcast::<V>().map_err(|_| {
                 CacheError::Internal(format!(
                     "type mismatch in cache; expected {}",
@@ -394,6 +408,8 @@ mod tests {
         let cache = make_cache();
         let authorizer = Arc::new(theligi_authorization::BetterAuthProvider);
 
+        let context = isolated_context();
+
         {
             let pipeline = HierarchicalDataAccess::<String>::new(
                 cache.clone(),
@@ -402,7 +418,6 @@ mod tests {
                 None,
                 None,
             );
-            let context = isolated_context();
             let result = pipeline.execute(&context, id).await;
             assert!(result.is_ok());
             assert_eq!(result.unwrap().unwrap(), "original");
@@ -411,7 +426,6 @@ mod tests {
         repo.delete(id).await.unwrap();
 
         let pipeline = HierarchicalDataAccess::<String>::new(cache, repo, authorizer, None, None);
-        let context = isolated_context();
         let result = pipeline.execute(&context, id).await;
         assert!(result.is_ok());
         assert_eq!(result.unwrap().unwrap(), "original");
@@ -474,6 +488,49 @@ mod tests {
             Err(DataAccessError::Cache(CacheError::Unavailable(
                 CacheTier::L5
             )))
+        ));
+    }
+
+    #[tokio::test]
+    async fn cross_tenant_cache_isolation() {
+        let repo = Arc::new(InMemoryRepository::<String>::new());
+        let id = repo.create("secret".to_string()).await.unwrap();
+        let cache = make_cache();
+        let authorizer = Arc::new(theligi_authorization::BetterAuthProvider);
+        let pipeline = HierarchicalDataAccess::new(
+            cache.clone(),
+            repo.clone(),
+            authorizer.clone(),
+            None,
+            None,
+        );
+
+        let tenant_a = uuid::Uuid::new_v4();
+        let session_a = uuid::Uuid::new_v4();
+        let context_a = AuthorizationContext::new()
+            .with_tenant(tenant_a)
+            .with_session(session_a)
+            .with_claim("sub", "subject-a");
+
+        let tenant_b = uuid::Uuid::new_v4();
+        let session_b = uuid::Uuid::new_v4();
+        let context_b = AuthorizationContext::new()
+            .with_tenant(tenant_b)
+            .with_session(session_b)
+            .with_claim("sub", "subject-b");
+
+        let result_a = pipeline.execute(&context_a, id).await;
+        assert!(result_a.is_ok());
+        assert_eq!(result_a.unwrap().unwrap(), "secret");
+
+        repo.delete(id).await.unwrap();
+
+        let result_b = pipeline.execute(&context_b, id).await;
+        assert!(matches!(
+            result_b,
+            Err(DataAccessError::Repository(
+                theligi_repository::RepositoryError::NotFound(_)
+            ))
         ));
     }
 }

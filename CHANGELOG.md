@@ -5,6 +5,36 @@ Update after every turn.
 
 ## [Unreleased]
 
+### 2026-09-12 — Cache context isolation (PR #4)
+
+Fixes cross-tenant cache key collision in `HierarchicalDataAccess::execute()`.
+Satisfies `user_context_isolation`, `no_unauthorized_cache_hit`, and
+`cache_context_isolated` constraints from `@specs/SPEC.toml` and
+`@specs/SUBSYSTEM.toml`.
+
+#### theligi-data-access
+
+- Cache key format changed from `namespace:request` to
+  `namespace:tenant_id:session_id:subject:request`, scoping each cache entry
+  to the requesting authorization context.
+- Added explicit re-authorization (`self.authorizer.authorize(...)`) inside
+  the cache-hit branch before returning the cached value, satisfying
+  `authorization_on_cache_hit = true`.
+- Removed now-unused `CacheKey` import from `crates/data_access/src/lib.rs`.
+- Fixed `cache_hit_short_circuits_repository` test: now reuses the same
+  `isolated_context()` across both pipeline invocations.
+- Added `cross_tenant_cache_isolation` regression test: verifies that a
+  second tenant requesting the same `CasId` after the backing repository
+  entry is deleted receives `DataAccessError::Repository(RepositoryError::NotFound(_))`
+  rather than a stale cache hit.
+
+#### Validation
+
+- `cargo fmt --check` — clean.
+- `cargo check --workspace` — clean.
+- `cargo clippy --workspace` — clean.
+- `cargo test --workspace` — all crates pass (workspace-wide green).
+
 ### 2026-09-12 — PR #4 review fixes (cache write policy + error conversion)
 
 Addresses review feedback on PR #4 head:
