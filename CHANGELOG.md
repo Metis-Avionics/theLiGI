@@ -64,6 +64,49 @@ cache and data-access layers. Converges `OrchestrationPipeline` and
 - `cargo test --workspace` — all crates pass (workspace-wide green).
 - No `unsafe` introduced.
 
+### 2026-09-12 — PR #4 review fixes (dependency reproducibility + test hardening)
+
+Post-review fixups for PR #4 head `1659f8b`:
+
+#### theDAF (shared infrastructure)
+
+- Committed and pushed fail-closed `HierarchicalCache` changes to
+  `feat/l0-l5-hierarchical-cache` branch (`37d54d7`).
+- `HierarchicalCache::get/delete/delete_prefix/clear/shake` now require
+  L0 and L5 and propagate tier errors with `?` instead of logging and
+  continuing.
+- L1 promotion errors in `get()` propagate instead of being swallowed.
+
+#### theLiGI dependency pinning
+
+- Replaced local `theDAF` path dependencies for `daf-cache` and
+  `daf-core` with git dependencies on
+  `https://github.com/RAliane-REBORN/theDAF.git`
+  `branch = "feat/l0-l5-hierarchical-cache"`.
+- Other theDAF crates (`daf-repository`, `daf-algorithms`,
+  `daf-runtime`, `daf-messaging`, `daf-http`, `daf-application`)
+  remain as path dependencies.
+- Removed redundant `package` keys from crate manifests; workspace
+  deduplication in root `Cargo.toml` handles aliasing.
+- Regenerated `Cargo.lock` to remove duplicate local `daf-cache`
+  entry.
+
+#### Test hardening
+
+- `missing_l0_returns_error` asserts exact message
+  `"L0 cache tier is not configured"` instead of generic
+  `result.is_err()`.
+- `missing_l5_returns_error` asserts exact message
+  `"L5 cache tier is not configured"` instead of generic
+  `result.is_err()`.
+
+#### Validation
+
+- `cargo fmt --check` — clean.
+- `cargo check --workspace` — clean.
+- `cargo clippy --workspace` — clean.
+- `cargo test --workspace` — all crates pass (workspace-wide green).
+
 ## [0.1.0] - 2026-09-12
 
 ### Added

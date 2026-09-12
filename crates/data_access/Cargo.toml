@@ -16,9 +16,8 @@ theligi-cache = { path = "../cache" }
 theligi-algorithm = { path = "../algorithm" }
 theligi-authorization = { path = "../authorization" }
 theligi-validation = { path = "../validation" }
-daf-core = { path = "../../../theDAF/crates/daf-core", package = "daf-core" }
-daf-application = { path = "../../../theDAF/crates/daf-application", package = "daf-application" }
-daf-cache = { path = "../../../theDAF/crates/daf-cache", package = "daf-cache" }
+daf-core = { workspace = true }
+daf-cache = { workspace = true }
 
 [lib]
 crate-type = ["rlib"]

@@ -6,44 +6,59 @@ ends, fold the in-flight items into `HANDOVER.md`.
 ## Current session
 
 - Date: 2026-09-12
-- Mode: build
+- Mode: review-fixes
 - Agent: Kilo (stepfun/step-3.7-flash:free)
-- Branch: `feat/l0-l5-hierarchical-cache-pipeline` (off main, post commit `9493cac`)
+- Branch: `feat/l0-l5-hierarchical-cache-pipeline` (off main at `1659f8b`)
 
 ## Just-completed turn
 
-Hierarchical data-access pipeline implementation (plan: `.kilo/plans/1789226415812-hierarchical-pipeline-implementation.md`):
+Post-review fixups for PR #4 (head `1659f8b`):
 
-- **1. `CacheError::Unavailable(CacheTier)`** added to `theligi-cache`. `CacheTier` now implements `Display`. The `HierarchicalCacheWrapper` returns `Unavailable` for absent L0/L5 instead of panicking via `unwrap()` or silently falling back to L4/L1.
-- **2. `daf-cache::HierarchicalCache` error propagation fixed**: all 6 methods (`get`, `set`, `delete`, `delete_prefix`, `clear`, `shake`) now require L0 and L5 to be configured and propagate tier errors with `?` instead of `tracing::warn!` + continue. Promotion errors in `get()` also propagate.
-- **3. `HierarchicalDataAccess<V>` rewritten** as the canonical `DataAccess` implementation: generic over `V: Send + Sync + Clone + 'static`, holds `cache`, `repository`, `authorizer`, `algorithm`, `validator`. `execute()` implements the full pipeline: validate → authorize → cache_lookup → repository_lookup → algorithm → cache_population (L1). The validator is now actually invoked; `DataAccessError::Validation` converts from `theligi_validation::ValidationError`.
-- **4. `OrchestrationPipeline` removed** (architectural duplication; unused outside `data_access/src/lib.rs`).
-- **5. `theligi-validation` dependency added** to `data_access/Cargo.toml` for `SeriesValidator`.
-- **6. Tests added**: `authorization_enforced_before_cache_access`, `full_pipeline_cache_miss_then_hit`, `cache_hit_short_circuits_repository`, `missing_l0_returns_error`, `missing_l5_returns_error` in `data_access/src/lib.rs`; `hierarchical_wrapper_l0_unavailable`, `hierarchical_wrapper_l5_unavailable` in `cache/src/lib.rs`.
-- **7. `ttl_seconds` handling**: intentionally discarded in `HierarchicalCacheWrapper::set()` with a `tracing::debug!` note because daf-cache tiers do not support TTL.
+- **1. `theDAF` integration made reproducible**: committed and pushed
+  fail-closed `HierarchicalCache` changes to theDAF branch
+  `feat/l0-l5-hierarchical-cache` (commit `37d54d7`). TheDAF local
+  uncommitted changes are no longer an implicit dependency.
+- **2. theLiGI dependency pinning**: replaced local `theDAF` path
+  dependencies with git dependencies on
+  `https://github.com/RAliane-REBORN/theDAF.git`
+  `branch = "feat/l0-l5-hierarchical-cache"` for `daf-cache` and
+  `daf-core`. Other theDAF crates remain path dependencies.
+  Workspace-level deduplication in `Cargo.toml` removes redundant
+  `package` keys from crate manifests.
+- **3. Missing-tier tests strengthened**: `missing_l0_returns_error` and
+  `missing_l5_returns_error` now assert the exact error message
+  (`"L0 cache tier is not configured"` / `"L5 cache tier is not
+  configured"`) instead of generic `result.is_err()`.
+- **4. `Cargo.lock` regenerated** after removing the duplicate local
+  `daf-cache` entry that was shadowing the git-pinned package.
 
 ## State of the repository
 
-- `main` at commit `9493cac` (feat: wire L0-L5 hierarchical cache into data-access pipeline).
-- Branch `feat/l0-l5-hierarchical-cache-pipeline` has uncommitted changes (5 files modified, 1 plan file untracked).
-- 37 crates in workspace; path dependencies to `../../theMQL/` and `../../theDAF/`.
-- All validation gates pass: `cargo fmt --check`, `cargo check --workspace`, `cargo clippy --workspace`, `cargo test --workspace`.
-- Workspace tests: all crates pass (specific counts below).
+- `main` at commit `1659f8b` (fix: invoke SeriesValidator in execute).
+- Branch `feat/l0-l5-hierarchical-cache-pipeline` has uncommitted
+  changes: `Cargo.lock`, `Cargo.toml`, `crates/cache/Cargo.toml`,
+  `crates/core/Cargo.toml`, `crates/data_access/Cargo.toml`,
+  `crates/data_access/src/lib.rs`.
+- theDAF `feat/l0-l5-hierarchical-cache` at commit `37d54d7`
+  (`feat: enforce fail-closed semantics for L0/L5 tiers`).
+- 37 crates in workspace; primary external dependencies now git-pinned
+  for reproducibility.
+- All validation gates pass: `cargo fmt --check`, `cargo check
+  --workspace`, `cargo clippy --workspace`, `cargo test --workspace`.
 
 ## In-flight work
 
-- Hierarchical pipeline implementation complete; awaiting commit + push.
-- `@specs/SUBSYSTEM.toml` `execution_order` already documents the correct pipeline; no spec changes needed.
-- `Factory` still uses `()` placeholder types; not addressed in this turn (out of scope for the plan).
+- Ready to commit review-fix changes and push to PR #4.
 
 ## Next plausible actions (suggestions, not commitments)
 
-1. Commit and push the hierarchical pipeline work; open/update PR.
-2. Specialize `Factory` with concrete domain types once `V` is chosen.
-3. Implement content-series-specific `Algorithm` and `SeriesValidator` implementations.
-4. Wire L0 population in the pipeline's `cache_population` step to the request-local tier.
-5. Implement invalidation policy (follow-up PR per plan).
+1. Commit review fixes with message referencing PR #4 review feedback.
+2. Push branch and update PR #4 comment summarizing theDAF push +
+   dependency pinning.
+3. Address remaining review items: TTL contract decision, session doc
+   cleanup, stronger `validation_enforced_before_authorization`
+   instrumentation.
 
 ## Open questions / blockers
 
-None.
+- None.

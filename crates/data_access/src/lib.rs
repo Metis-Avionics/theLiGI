@@ -409,6 +409,11 @@ mod tests {
         let request = uuid::Uuid::new_v4();
         let result = pipeline.execute(&context, request).await;
         assert!(result.is_err());
+        let err = result.unwrap_err();
+        assert!(
+            format!("{err}").contains("L0 cache tier is not configured"),
+            "unexpected error: {err}"
+        );
     }
 
     #[tokio::test]
@@ -434,5 +439,10 @@ mod tests {
         let request = uuid::Uuid::new_v4();
         let result = pipeline.execute(&context, request).await;
         assert!(result.is_err());
+        let err = result.unwrap_err();
+        assert!(
+            format!("{err}").contains("L5 cache tier is not configured"),
+            "unexpected error: {err}"
+        );
     }
 }

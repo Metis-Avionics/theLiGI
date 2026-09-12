@@ -12,4 +12,4 @@ serde = { workspace = true, features = ["derive"] }
 uuid = { workspace = true, features = ["v4", "serde"] }
 thiserror = { workspace = true }
 themql-core = { path = "../../../theMQL/crates/themql-core", package = "themql-core" }
-daf-core = { path = "../../../theDAF/crates/daf-core", package = "daf-core" }
+daf-core = { workspace = true }

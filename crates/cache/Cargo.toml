@@ -13,8 +13,8 @@ tokio = { workspace = true }
 tracing = { workspace = true }
 async-trait = { workspace = true }
 dashmap = { workspace = true }
-daf-core = { path = "../../../theDAF/crates/daf-core", package = "daf-core" }
-daf-cache = { path = "../../../theDAF/crates/daf-cache", package = "daf-cache" }
+daf-core = { workspace = true }
+daf-cache = { workspace = true }
 
 [lib]
 crate-type = ["rlib"]
