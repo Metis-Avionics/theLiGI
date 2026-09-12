@@ -7,9 +7,11 @@ Handover notes for the next agent/session. Fold in-flight items from
 
 ### Repository state at handover
 
-- Branch: `feat/l0-l5-hierarchical-cache-pipeline` (off `main` at `1659f8b`).
+- Branch: `feat/l0-l5-hierarchical-cache-pipeline` (head at `e02e5a5`).
  - Working tree has uncommitted changes: `Cargo.lock`, `Cargo.toml`,
-   `crates/cache/src/lib.rs`, `crates/data_access/src/lib.rs`.
+   `crates/algorithm/Cargo.toml`, `crates/http/Cargo.toml`,
+   `crates/repository/Cargo.toml`, `SESSION.md`, `CHANGELOG.md`,
+   `HANDOVER.md`.
 - theDAF `feat/l0-l5-hierarchical-cache` at commit `37d54d7`
   (`feat: enforce fail-closed semantics for L0/L5 tiers`).
 - All validation gates pass: `cargo fmt --check`, `cargo check
@@ -18,7 +20,7 @@ Handover notes for the next agent/session. Fold in-flight items from
 
 ### What is done this turn
 
-Post-review fixups for PR #4 (head `1659f8b`):
+Post-review fixups for PR #4 (head `e02e5a5`):
 
 - **theDAF**: committed and pushed fail-closed `HierarchicalCache`
   changes to branch `feat/l0-l5-hierarchical-cache` (`37d54d7`).
@@ -37,6 +39,15 @@ Post-review fixups for PR #4 (head `1659f8b`):
    instead of matching rendered error strings.
  - **`Cargo.lock` regenerated** to remove duplicate local `daf-cache`
    entry.
+ - **Dependency graph deduplication (PR #4 integration blocker)**:
+   converted all remaining theDAF workspace dependencies
+   (`daf-repository`, `daf-algorithms`, `daf-http`, `daf-application`)
+   from local `path` dependencies to the same immutable git revision
+   already used for `daf-core` and `daf-cache`. Updated corresponding
+   crate manifests to use `{ workspace = true }`. `Cargo.lock` now
+   contains exactly one entry each for `daf-core` and `daf-cache`,
+   both sourced from the pinned git revision. This closes the
+   reproducibility gap identified in PR review comment #5647232913.
 
 ### What is NOT done (follow-ups, not blockers)
 

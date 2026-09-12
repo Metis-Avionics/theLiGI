@@ -411,21 +411,23 @@ dependencies = [
 [[package]]
 name = "daf-algorithms"
 version = "0.1.0"
+source = "git+https://github.com/RAliane-REBORN/theDAF.git?rev=37d54d78f6e7d1e3baf73db4c2daa00e78266422#37d54d78f6e7d1e3baf73db4c2daa00e78266422"
 dependencies = [
  "async-trait",
- "daf-core 0.1.0",
+ "daf-core",
  "tokio",
 ]
 
 [[package]]
 name = "daf-application"
 version = "0.1.0"
+source = "git+https://github.com/RAliane-REBORN/theDAF.git?rev=37d54d78f6e7d1e3baf73db4c2daa00e78266422#37d54d78f6e7d1e3baf73db4c2daa00e78266422"
 dependencies = [
  "async-trait",
  "chrono",
  "daf-algorithms",
- "daf-cache 0.1.0",
- "daf-core 0.1.0",
+ "daf-cache",
+ "daf-core",
  "daf-repository",
  "hex",
  "lru",
@@ -439,25 +441,10 @@ dependencies = [
 [[package]]
 name = "daf-cache"
 version = "0.1.0"
-dependencies = [
- "async-trait",
- "daf-core 0.1.0",
- "lru",
- "moka",
- "serde",
- "serde_json",
- "thiserror 2.0.20",
- "tokio",
- "tracing",
-]
-
-[[package]]
-name = "daf-cache"
-version = "0.1.0"
 source = "git+https://github.com/RAliane-REBORN/theDAF.git?rev=37d54d78f6e7d1e3baf73db4c2daa00e78266422#37d54d78f6e7d1e3baf73db4c2daa00e78266422"
 dependencies = [
  "async-trait",
- "daf-core 0.1.0 (git+https://github.com/RAliane-REBORN/theDAF.git?rev=37d54d78f6e7d1e3baf73db4c2daa00e78266422)",
+ "daf-core",
  "lru",
  "moka",
  "serde",
@@ -465,18 +452,6 @@ dependencies = [
  "thiserror 2.0.20",
  "tokio",
  "tracing",
-]
-
-[[package]]
-name = "daf-core"
-version = "0.1.0"
-dependencies = [
- "async-trait",
- "chrono",
- "serde",
- "serde_json",
- "thiserror 2.0.20",
- "tokio",
 ]
 
 [[package]]
@@ -495,11 +470,12 @@ dependencies = [
 [[package]]
 name = "daf-http"
 version = "0.1.0"
+source = "git+https://github.com/RAliane-REBORN/theDAF.git?rev=37d54d78f6e7d1e3baf73db4c2daa00e78266422#37d54d78f6e7d1e3baf73db4c2daa00e78266422"
 dependencies = [
  "async-trait",
  "axum",
  "daf-application",
- "daf-core 0.1.0",
+ "daf-core",
  "serde",
  "serde_json",
  "thiserror 2.0.20",
@@ -509,9 +485,10 @@ dependencies = [
 [[package]]
 name = "daf-repository"
 version = "0.1.0"
+source = "git+https://github.com/RAliane-REBORN/theDAF.git?rev=37d54d78f6e7d1e3baf73db4c2daa00e78266422#37d54d78f6e7d1e3baf73db4c2daa00e78266422"
 dependencies = [
  "async-trait",
- "daf-core 0.1.0",
+ "daf-core",
  "serde",
  "serde_json",
  "thiserror 2.0.20",
@@ -1744,8 +1721,8 @@ name = "theligi-cache"
 version = "0.1.0"
 dependencies = [
  "async-trait",
- "daf-cache 0.1.0 (git+https://github.com/RAliane-REBORN/theDAF.git?rev=37d54d78f6e7d1e3baf73db4c2daa00e78266422)",
- "daf-core 0.1.0 (git+https://github.com/RAliane-REBORN/theDAF.git?rev=37d54d78f6e7d1e3baf73db4c2daa00e78266422)",
+ "daf-cache",
+ "daf-core",
  "dashmap",
  "serde",
  "serde_json",
@@ -1793,7 +1770,7 @@ dependencies = [
 name = "theligi-core"
 version = "0.1.0"
 dependencies = [
- "daf-core 0.1.0 (git+https://github.com/RAliane-REBORN/theDAF.git?rev=37d54d78f6e7d1e3baf73db4c2daa00e78266422)",
+ "daf-core",
  "serde",
  "themql-core",
  "thiserror 1.0.69",
@@ -1805,8 +1782,8 @@ name = "theligi-data-access"
 version = "0.1.0"
 dependencies = [
  "async-trait",
- "daf-cache 0.1.0 (git+https://github.com/RAliane-REBORN/theDAF.git?rev=37d54d78f6e7d1e3baf73db4c2daa00e78266422)",
- "daf-core 0.1.0 (git+https://github.com/RAliane-REBORN/theDAF.git?rev=37d54d78f6e7d1e3baf73db4c2daa00e78266422)",
+ "daf-cache",
+ "daf-core",
  "serde",
  "theligi-algorithm",
  "theligi-authorization",

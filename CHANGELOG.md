@@ -98,8 +98,28 @@ Post-review fixups for PR #4 head `1659f8b`:
 
  - `missing_l0_returns_error` and `missing_l5_returns_error` now use
    typed `matches!` assertions against
-   `DataAccessError::Cache(CacheError::Unavailable(CacheTier::L0/L5))`
-   instead of matching rendered error strings.
+    `DataAccessError::Cache(CacheError::Unavailable(CacheTier::L0/L5))`
+    instead of matching rendered error strings.
+
+#### Dependency graph deduplication (PR #4 integration blocker)
+
+  - Converted all remaining theDAF workspace dependencies
+    (`daf-repository`, `daf-algorithms`, `daf-http`, `daf-application`)
+    from local `path` dependencies to the same immutable git revision
+    already used for `daf-core` and `daf-cache`:
+    `https://github.com/RAliane-REBORN/theDAF.git`
+    `rev = "37d54d78f6e7d1e3baf73db4c2daa00e78266422`.
+  - Updated `crates/repository/Cargo.toml`, `crates/algorithm/Cargo.toml`,
+    and `crates/http/Cargo.toml` to use `{ workspace = true }` for their
+    theDAF dependencies.
+  - Removed unused workspace entries for `daf-runtime` and
+    `daf-messaging` from root `Cargo.toml`.
+  - Regenerated `Cargo.lock`; `daf-core` and `daf-cache` now each have
+    exactly one entry in the lockfile, both sourced from the pinned git
+    revision. No duplicate local/git package pairs remain.
+  - This closes the reproducibility gap identified in PR review comment
+    #5647232913: the workspace no longer compiles two distinct instances
+    of `daf-core` and `daf-cache`.
 
 #### Validation
 
