@@ -80,6 +80,18 @@ pub trait Cache: Send + Sync + 'static {
     async fn get(&self, key: &CacheKey, tier: CacheTier)
         -> Result<Option<Self::Value>, CacheError>;
 
+    /// Store a value in a specific tier.
+    ///
+    /// # TTL contract
+    ///
+    /// `ttl_seconds` is part of the public trait API but its behavior is
+    /// implementation-defined:
+    ///
+    /// - `InMemoryCache` stores the value for test/debug purposes but does
+    ///   not enforce expiry.
+    /// - `HierarchicalCacheWrapper` discards `ttl_seconds` because
+    ///   `daf-cache` tiers do not support TTL. A `tracing::debug!` note is
+    ///   emitted when a non-`None` value is passed.
     async fn set(
         &self,
         key: CacheKey,
@@ -458,5 +470,25 @@ mod tests {
             result,
             Err(CacheError::Unavailable(CacheTier::L5))
         ));
+    }
+
+    #[tokio::test]
+    async fn hierarchical_wrapper_set_ttl_is_noop() {
+        let l1 = Arc::new(daf_cache::MemoryCache::new(1024)) as Arc<dyn DafCache>;
+        let cache = HierarchicalCacheWrapper::<String>::new(
+            Some(Arc::new(daf_cache::MemoryCache::new(1024)) as Arc<dyn DafCache>),
+            l1.clone(),
+            Arc::new(daf_cache::MemoryCache::new(1024)) as Arc<dyn DafCache>,
+            Arc::new(daf_cache::MemoryCache::new(1024)) as Arc<dyn DafCache>,
+            Arc::new(daf_cache::MemoryCache::new(1024)) as Arc<dyn DafCache>,
+            Some(Arc::new(daf_cache::MemoryCache::new(1024)) as Arc<dyn DafCache>),
+        );
+        let key = CacheKey::new("ns", "key");
+        let result = cache
+            .set(key.clone(), "value".to_string(), CacheTier::L1, Some(60))
+            .await;
+        assert!(result.is_ok());
+        let fetched: Option<String> = cache.get(&key, CacheTier::L1).await.unwrap();
+        assert_eq!(fetched, Some("value".to_string()));
     }
 }

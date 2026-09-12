@@ -117,9 +117,27 @@ Post-review fixups for PR #4 head `1659f8b`:
   - Regenerated `Cargo.lock`; `daf-core` and `daf-cache` now each have
     exactly one entry in the lockfile, both sourced from the pinned git
     revision. No duplicate local/git package pairs remain.
-  - This closes the reproducibility gap identified in PR review comment
-    #5647232913: the workspace no longer compiles two distinct instances
-    of `daf-core` and `daf-cache`.
+   - This closes the reproducibility gap identified in PR review comment
+     #5647232913: the workspace no longer compiles two distinct instances
+     of `daf-core` and `daf-cache`.
+
+#### TTL contract decision
+
+  - Documented explicit contract in `Cache::set` trait doc: `ttl_seconds`
+    behavior is implementation-defined. `InMemoryCache` stores but does
+    not enforce expiry. `HierarchicalCacheWrapper` discards `ttl_seconds`
+    because `daf-cache` tiers do not support TTL, emitting a
+    `tracing::debug!` note.
+  - Added `hierarchical_wrapper_set_ttl_is_noop` test confirming that
+    passing `Some(60)` does not error and the value remains retrievable.
+
+#### Validation-order instrumentation
+
+  - Added `RecordingAuthorizer` test helper that records whether
+    `authorize` was invoked via `Arc<AtomicBool>`.
+  - `validation_enforced_before_authorization` now asserts both that
+    the result is `Err(DataAccessError::Validation(_))` AND that the
+    authorizer was never called.
 
 #### Validation
 

@@ -1,6 +1,8 @@
 use std::any::type_name;
 use std::sync::Arc;
 use theligi_algorithm::{Algorithm, AlgorithmError};
+#[cfg(test)]
+use theligi_authorization::AuthorizationDecision;
 use theligi_authorization::{AuthorizationContext, AuthorizationError, AuthorizationProvider};
 #[cfg(test)]
 use theligi_cache::CacheTier;
@@ -287,6 +289,30 @@ mod tests {
             .with_claim("sub", "test-subject")
     }
 
+    #[derive(Debug, Default)]
+    struct RecordingAuthorizer {
+        called: std::sync::Arc<std::sync::atomic::AtomicBool>,
+    }
+
+    impl RecordingAuthorizer {
+        fn new(called: std::sync::Arc<std::sync::atomic::AtomicBool>) -> Self {
+            Self { called }
+        }
+    }
+
+    #[async_trait::async_trait]
+    impl AuthorizationProvider for RecordingAuthorizer {
+        async fn authorize(
+            &self,
+            _context: &AuthorizationContext,
+            _resource: &str,
+            _action: &str,
+        ) -> Result<AuthorizationDecision, AuthorizationError> {
+            self.called.store(true, std::sync::atomic::Ordering::SeqCst);
+            Ok(AuthorizationDecision::Allow)
+        }
+    }
+
     fn make_cache() -> Arc<daf_cache::HierarchicalCache> {
         let l0 = Arc::new(daf_cache::MemoryCache::new(1024)) as Arc<dyn daf_core::Cache>;
         let l1 = Arc::new(daf_cache::MemoryCache::new(1024)) as Arc<dyn daf_core::Cache>;
@@ -308,14 +334,16 @@ mod tests {
     async fn validation_enforced_before_authorization() {
         let repo = Arc::new(InMemoryRepository::<String>::new());
         let cache = make_cache();
-        let authorizer = Arc::new(theligi_authorization::BetterAuthProvider);
-        let validator = Arc::new(FailingValidator::default());
+        let authorize_called = Arc::new(std::sync::atomic::AtomicBool::new(false));
+        let authorizer = Arc::new(RecordingAuthorizer::new(authorize_called.clone()));
+        let validator = Arc::new(FailingValidator);
         let pipeline = HierarchicalDataAccess::new(cache, repo, authorizer, None, Some(validator));
 
         let context = isolated_context();
         let request = uuid::Uuid::new_v4();
         let result = pipeline.execute(&context, request).await;
         assert!(matches!(result, Err(DataAccessError::Validation(_))));
+        assert!(!authorize_called.load(std::sync::atomic::Ordering::SeqCst));
     }
 
     #[tokio::test]

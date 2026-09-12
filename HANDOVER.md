@@ -5,68 +5,33 @@ Handover notes for the next agent/session. Fold in-flight items from
 
 ## Handover from: Kilo (stepfun/step-3.7-flash:free), 2026-09-12
 
-### Repository state at handover
+### Repository state
 
-- Branch: `feat/l0-l5-hierarchical-cache-pipeline` (head at `e02e5a5`).
- - Working tree has uncommitted changes: `Cargo.lock`, `Cargo.toml`,
-   `crates/algorithm/Cargo.toml`, `crates/http/Cargo.toml`,
-   `crates/repository/Cargo.toml`, `SESSION.md`, `CHANGELOG.md`,
-   `HANDOVER.md`.
-- theDAF `feat/l0-l5-hierarchical-cache` at commit `37d54d7`
-  (`feat: enforce fail-closed semantics for L0/L5 tiers`).
-- All validation gates pass: `cargo fmt --check`, `cargo check
-  --workspace`, `cargo clippy --workspace`, `cargo test --workspace`.
-- No open bugs.
+- Branch: `feat/l0-l5-hierarchical-cache-pipeline` (head at `1160150`).
+- Working tree has uncommitted changes: `SESSION.md`, `CHANGELOG.md`,
+  `HANDOVER.md`, `crates/data_access/src/lib.rs`, `crates/cache/src/lib.rs`.
+- theDAF pinned at `37d54d78f6e7d1e3baf73db4c2daa00e78266422`.
+- All validation gates pass.
 
-### What is done this turn
+### Completed this turn
 
-Post-review fixups for PR #4 (head `e02e5a5`):
+- **Dependency graph deduplication**: all remaining theDAF deps now
+  use the immutable git revision. `Cargo.lock` has exactly one entry
+  each for `daf-core` and `daf-cache`.
+- **Validation-order instrumentation**: `validation_enforced_before_authorization`
+  now uses `RecordingAuthorizer` to prove authorizer was not called.
+- **TTL contract**: documented explicit no-op for `HierarchicalCacheWrapper`;
+  added `hierarchical_wrapper_set_ttl_is_noop` test.
 
-- **theDAF**: committed and pushed fail-closed `HierarchicalCache`
-  changes to branch `feat/l0-l5-hierarchical-cache` (`37d54d7`).
-  Local uncommitted changes are no longer an implicit dependency.
- - **theLiGI dependency pinning**: `daf-cache` and `daf-core` are now
-   git-pinned to theDAF `feat/l0-l5-hierarchical-cache` at immutable
-   commit `37d54d78f6e7d1e3baf73db4c2daa00e78266422`. Other theDAF
-   crates remain path dependencies.
- - **Cache error conversion**: `From<daf_core::CacheError>` for
-   `theligi-cache::CacheError` now parses theDAF tier-unavailability
-   messages and maps them to typed `CacheError::Unavailable(CacheTier)`
-   variants, preserving fail-closed semantics across the boundary.
- - **Test hardening**: `missing_l0_returns_error` and
-   `missing_l5_returns_error` use typed `matches!` assertions against
-   `DataAccessError::Cache(CacheError::Unavailable(CacheTier::L0/L5))`
-   instead of matching rendered error strings.
- - **`Cargo.lock` regenerated** to remove duplicate local `daf-cache`
-   entry.
- - **Dependency graph deduplication (PR #4 integration blocker)**:
-   converted all remaining theDAF workspace dependencies
-   (`daf-repository`, `daf-algorithms`, `daf-http`, `daf-application`)
-   from local `path` dependencies to the same immutable git revision
-   already used for `daf-core` and `daf-cache`. Updated corresponding
-   crate manifests to use `{ workspace = true }`. `Cargo.lock` now
-   contains exactly one entry each for `daf-core` and `daf-cache`,
-   both sourced from the pinned git revision. This closes the
-   reproducibility gap identified in PR review comment #5647232913.
+### Follow-ups (not blockers)
 
-### What is NOT done (follow-ups, not blockers)
+- TTL trait extension if daf-cache ever supports expiry.
+- `validation_enforced_before_authorization` could also instrument
+  cache/repository, but the current `RecordingAuthorizer` plus early
+  return on validation error is sufficient for the security ordering
+  guarantee.
 
-- TTL contract still unresolved: API accepts `ttl_seconds` but daf-cache
-  tiers ignore it. Needs explicit decision (error / no-op / trait
-  extension).
-- `validation_enforced_before_authorization` test does not yet
-  instrument the authorizer to prove authorization was not called.
-- `SESSION.md` / `HANDOVER.md` volume may be excessive for permanent
-  repository history; consider trimming in a cleanup PR.
-
-### Environment constraints
-
-- Single Rust runtime. No Python, Node, subprocess workers, or
-  cross-runtime RPC.
-- External systems allowed; external language runtimes not.
-- `cargo test --workspace` passes in the current environment.
-
-### Validation commands the next agent should run
+### Validation commands
 
 ```
 cargo fmt --check
@@ -74,30 +39,3 @@ cargo check --workspace
 cargo clippy --workspace
 cargo test --workspace
 ```
-
-## Handover from: Kilo (stepfun/step-3.7-flash:free), 2026-09-12 (pre-pipeline state)
-
-### Repository state at handover
-
-- Branch: `feat/l0-l5-hierarchical-cache-pipeline` (off `main` at `9493cac`).
-- Commit `9493cac` ("feat: wire L0-L5 hierarchical cache into data-access pipeline") merged to main.
-- Prior work established the hierarchical cache vocabulary and `HierarchicalDataAccess` stub.
-- `OrchestrationPipeline` existed as an unused architectural duplication.
-- `daf_cache::HierarchicalCache` silently continued on tier errors via `tracing::warn!`.
-- `HierarchicalCacheWrapper` used `unwrap()` on L0 and silently fell back L5→L4 and L0→L1.
-
-### What was done before this turn
-
-- Wired `daf_cache::HierarchicalCache` into `theligi-cache` as `HierarchicalCacheWrapper<V>`.
-- Established `CacheTier` enum and `CacheKey` struct in `theligi-cache`.
-- Stubbed `HierarchicalDataAccess::execute()` with trace logging only.
-- Defined `DataAccess` trait, `DataAccessError` enum, and `OrchestrationPipeline` stub.
-- Added `theligi-algorithm`, `theligi-authorization`, `theligi-repository`, `theligi-cache`, `daf-cache`, `daf-application` dependencies to `theligi-data-access`.
-
-### Environment constraints
-
-- Same as above.
-
-### Validation commands the next agent should run
-
-- Same as above.
