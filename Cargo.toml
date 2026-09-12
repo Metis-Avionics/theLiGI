@@ -68,19 +68,17 @@ theligi-server = { path = "crates/server" }
 theligi-telemetry = { path = "crates/telemetry" }
 
 # Parent architecture inheritance
-themql-core = { path = "../../theMQL/crates/themql-core", package = "themql-core" }
-themql-message = { path = "../../theMQL/crates/themql-message", package = "themql-message" }
-themql-query = { path = "../../theMQL/crates/themql-query", package = "themql-query" }
-themql-runtime = { path = "../../theMQL/crates/themql-runtime", package = "themql-runtime" }
-themql-telemetry = { path = "../../theMQL/crates/themql-telemetry", package = "themql-telemetry" }
-themql-artifact = { path = "../../theMQL/crates/themql-artifact", package = "themql-artifact" }
-themql-schema = { path = "../../theMQL/crates/themql-schema", package = "themql-schema" }
+themql-core = { path = "../theMQL/crates/themql-core", package = "themql-core" }
+themql-message = { path = "../theMQL/crates/themql-message", package = "themql-message" }
+themql-query = { path = "../theMQL/crates/themql-query", package = "themql-query" }
+themql-runtime = { path = "../theMQL/crates/themql-runtime", package = "themql-runtime" }
+themql-telemetry = { path = "../theMQL/crates/themql-telemetry", package = "themql-telemetry" }
+themql-artifact = { path = "../theMQL/crates/themql-artifact", package = "themql-artifact" }
+themql-schema = { path = "../theMQL/crates/themql-schema", package = "themql-schema" }
 
-daf-core = { path = "../../theDAF/crates/daf-core", package = "daf-core" }
-daf-repository = { path = "../../theDAF/crates/daf-repository", package = "daf-repository" }
-daf-cache = { path = "../../theDAF/crates/daf-cache", package = "daf-cache" }
-daf-algorithms = { path = "../../theDAF/crates/daf-algorithms", package = "daf-algorithms" }
-daf-runtime = { path = "../../theDAF/crates/daf-runtime", package = "daf-runtime" }
-daf-messaging = { path = "../../theDAF/crates/daf-messaging", package = "daf-messaging" }
-daf-http = { path = "../../theDAF/crates/daf-http", package = "daf-http" }
-daf-application = { path = "../../theDAF/crates/daf-application", package = "daf-application" }
+daf-core = { git = "https://github.com/RAliane-REBORN/theDAF.git", rev = "37d54d78f6e7d1e3baf73db4c2daa00e78266422", package = "daf-core" }
+daf-repository = { git = "https://github.com/RAliane-REBORN/theDAF.git", rev = "37d54d78f6e7d1e3baf73db4c2daa00e78266422", package = "daf-repository" }
+daf-cache = { git = "https://github.com/RAliane-REBORN/theDAF.git", rev = "37d54d78f6e7d1e3baf73db4c2daa00e78266422", package = "daf-cache" }
+daf-algorithms = { git = "https://github.com/RAliane-REBORN/theDAF.git", rev = "37d54d78f6e7d1e3baf73db4c2daa00e78266422", package = "daf-algorithms" }
+daf-http = { git = "https://github.com/RAliane-REBORN/theDAF.git", rev = "37d54d78f6e7d1e3baf73db4c2daa00e78266422", package = "daf-http" }
+daf-application = { git = "https://github.com/RAliane-REBORN/theDAF.git", rev = "37d54d78f6e7d1e3baf73db4c2daa00e78266422", package = "daf-application" }

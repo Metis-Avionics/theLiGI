@@ -13,6 +13,19 @@ pub enum CacheTier {
     L5 = 5,
 }
 
+impl std::fmt::Display for CacheTier {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            CacheTier::L0 => write!(f, "L0"),
+            CacheTier::L1 => write!(f, "L1"),
+            CacheTier::L2 => write!(f, "L2"),
+            CacheTier::L3 => write!(f, "L3"),
+            CacheTier::L4 => write!(f, "L4"),
+            CacheTier::L5 => write!(f, "L5"),
+        }
+    }
+}
+
 /// Canonical cache key.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
 pub struct CacheKey {
@@ -41,6 +54,9 @@ pub enum CacheError {
     #[error("key not found: {0}")]
     NotFound(CacheKey),
 
+    #[error("cache tier unavailable: {0}")]
+    Unavailable(CacheTier),
+
     #[error("serialization error: {0}")]
     Serialization(#[from] serde_json::Error),
 
@@ -64,6 +80,18 @@ pub trait Cache: Send + Sync + 'static {
     async fn get(&self, key: &CacheKey, tier: CacheTier)
         -> Result<Option<Self::Value>, CacheError>;
 
+    /// Store a value in a specific tier.
+    ///
+    /// # TTL contract
+    ///
+    /// `ttl_seconds` is part of the public trait API but its behavior is
+    /// implementation-defined:
+    ///
+    /// - `InMemoryCache` stores the value for test/debug purposes but does
+    ///   not enforce expiry.
+    /// - `HierarchicalCacheWrapper` discards `ttl_seconds` because
+    ///   `daf-cache` tiers do not support TTL. A `tracing::debug!` note is
+    ///   emitted when a non-`None` value is passed.
     async fn set(
         &self,
         key: CacheKey,
@@ -204,17 +232,23 @@ where
     ) -> Result<Option<Self::Value>, CacheError> {
         let key_str = format!("{}:{}", key.namespace, key.key);
         let entry = match tier {
-            CacheTier::L0 => self.inner.l0().unwrap().get(&key_str).await?,
+            CacheTier::L0 => {
+                let l0 = self
+                    .inner
+                    .l0()
+                    .ok_or_else(|| CacheError::Unavailable(CacheTier::L0))?;
+                l0.get(&key_str).await?
+            }
             CacheTier::L1 => self.inner.l1().get(&key_str).await?,
             CacheTier::L2 => self.inner.l2().get(&key_str).await?,
             CacheTier::L3 => self.inner.l3().get(&key_str).await?,
             CacheTier::L4 => self.inner.l4().get(&key_str).await?,
             CacheTier::L5 => {
-                self.inner
+                let l5 = self
+                    .inner
                     .l5()
-                    .map_or(self.inner.l4(), |l5| l5)
-                    .get(&key_str)
-                    .await?
+                    .ok_or_else(|| CacheError::Unavailable(CacheTier::L5))?;
+                l5.get(&key_str).await?
             }
         };
         match entry {
@@ -236,23 +270,35 @@ where
         key: CacheKey,
         value: Self::Value,
         tier: CacheTier,
-        _ttl_seconds: Option<u64>,
+        ttl_seconds: Option<u64>,
     ) -> Result<(), CacheError> {
         let key_str = format!("{}:{}", key.namespace, key.key);
         let any: Arc<dyn std::any::Any + Send + Sync> = Arc::new(value);
         match tier {
-            CacheTier::L0 => self.inner.l0().unwrap().set(key_str, any).await?,
+            CacheTier::L0 => {
+                let l0 = self
+                    .inner
+                    .l0()
+                    .ok_or_else(|| CacheError::Unavailable(CacheTier::L0))?;
+                l0.set(key_str, any).await?;
+            }
             CacheTier::L1 => self.inner.l1().set(key_str, any).await?,
             CacheTier::L2 => self.inner.l2().set(key_str, any).await?,
             CacheTier::L3 => self.inner.l3().set(key_str, any).await?,
             CacheTier::L4 => self.inner.l4().set(key_str, any).await?,
             CacheTier::L5 => {
-                if let Some(l5) = self.inner.l5() {
-                    l5.set(key_str, any).await?;
-                } else {
-                    self.inner.l1().set(key_str, any).await?;
-                }
+                let l5 = self
+                    .inner
+                    .l5()
+                    .ok_or_else(|| CacheError::Unavailable(CacheTier::L5))?;
+                l5.set(key_str, any).await?;
             }
+        }
+        if ttl_seconds.is_some() {
+            tracing::debug!(
+                tier = ?tier,
+                "ttl_seconds discarded; daf-cache tiers do not support TTL"
+            );
         }
         Ok(())
     }
@@ -260,17 +306,23 @@ where
     async fn delete(&self, key: &CacheKey, tier: CacheTier) -> Result<(), CacheError> {
         let key_str = format!("{}:{}", key.namespace, key.key);
         match tier {
-            CacheTier::L0 => self.inner.l0().unwrap().delete(&key_str).await?,
+            CacheTier::L0 => {
+                let l0 = self
+                    .inner
+                    .l0()
+                    .ok_or_else(|| CacheError::Unavailable(CacheTier::L0))?;
+                l0.delete(&key_str).await?;
+            }
             CacheTier::L1 => self.inner.l1().delete(&key_str).await?,
             CacheTier::L2 => self.inner.l2().delete(&key_str).await?,
             CacheTier::L3 => self.inner.l3().delete(&key_str).await?,
             CacheTier::L4 => self.inner.l4().delete(&key_str).await?,
             CacheTier::L5 => {
-                if let Some(l5) = self.inner.l5() {
-                    l5.delete(&key_str).await?;
-                } else {
-                    self.inner.l1().delete(&key_str).await?;
-                }
+                let l5 = self
+                    .inner
+                    .l5()
+                    .ok_or_else(|| CacheError::Unavailable(CacheTier::L5))?;
+                l5.delete(&key_str).await?;
             }
         }
         Ok(())
@@ -288,7 +340,11 @@ where
 
 impl From<daf_core::CacheError> for CacheError {
     fn from(e: daf_core::CacheError) -> Self {
-        CacheError::Internal(e.to_string())
+        match e.0.as_str() {
+            "L0 cache tier is not configured" => CacheError::Unavailable(CacheTier::L0),
+            "L5 cache tier is not configured" => CacheError::Unavailable(CacheTier::L5),
+            _ => CacheError::Internal(e.to_string()),
+        }
     }
 }
 
@@ -350,15 +406,17 @@ mod tests {
 
     #[tokio::test]
     async fn hierarchical_wrapper_set_get_round_trip() {
+        let l0 = Arc::new(daf_cache::MemoryCache::new(1024)) as Arc<dyn DafCache>;
         let l1 = Arc::new(daf_cache::MemoryCache::new(1024)) as Arc<dyn DafCache>;
         let l2 = Arc::new(daf_cache::MokaCache::new(1024)) as Arc<dyn DafCache>;
+        let l5 = Arc::new(daf_cache::MemoryCache::new(1024)) as Arc<dyn DafCache>;
         let cache = HierarchicalCacheWrapper::<String>::new(
-            None,
+            Some(l0.clone()),
             l1.clone(),
             l2,
             l1.clone(),
             l1.clone(),
-            None,
+            Some(l5),
         );
         let key = CacheKey::new("ns", "key");
         cache
@@ -367,5 +425,63 @@ mod tests {
             .unwrap();
         let result: Option<String> = cache.get(&key, CacheTier::L1).await.unwrap();
         assert_eq!(result, Some("value".to_string()));
+    }
+
+    #[tokio::test]
+    async fn hierarchical_wrapper_l0_unavailable() {
+        let l1 = Arc::new(daf_cache::MemoryCache::new(1024)) as Arc<dyn DafCache>;
+        let cache = HierarchicalCacheWrapper::<String>::new(
+            None,
+            l1,
+            Arc::new(daf_cache::MemoryCache::new(1024)) as Arc<dyn DafCache>,
+            Arc::new(daf_cache::MemoryCache::new(1024)) as Arc<dyn DafCache>,
+            Arc::new(daf_cache::MemoryCache::new(1024)) as Arc<dyn DafCache>,
+            None,
+        );
+        let key = CacheKey::new("ns", "key");
+        let result = cache.get(&key, CacheTier::L0).await;
+        assert!(matches!(
+            result,
+            Err(CacheError::Unavailable(CacheTier::L0))
+        ));
+    }
+
+    #[tokio::test]
+    async fn hierarchical_wrapper_l5_unavailable() {
+        let l1 = Arc::new(daf_cache::MemoryCache::new(1024)) as Arc<dyn DafCache>;
+        let cache = HierarchicalCacheWrapper::<String>::new(
+            Some(Arc::new(daf_cache::MemoryCache::new(1024)) as Arc<dyn DafCache>),
+            l1,
+            Arc::new(daf_cache::MemoryCache::new(1024)) as Arc<dyn DafCache>,
+            Arc::new(daf_cache::MemoryCache::new(1024)) as Arc<dyn DafCache>,
+            Arc::new(daf_cache::MemoryCache::new(1024)) as Arc<dyn DafCache>,
+            None,
+        );
+        let key = CacheKey::new("ns", "key");
+        let result = cache.get(&key, CacheTier::L5).await;
+        assert!(matches!(
+            result,
+            Err(CacheError::Unavailable(CacheTier::L5))
+        ));
+    }
+
+    #[tokio::test]
+    async fn hierarchical_wrapper_set_ttl_is_noop() {
+        let l1 = Arc::new(daf_cache::MemoryCache::new(1024)) as Arc<dyn DafCache>;
+        let cache = HierarchicalCacheWrapper::<String>::new(
+            Some(Arc::new(daf_cache::MemoryCache::new(1024)) as Arc<dyn DafCache>),
+            l1.clone(),
+            Arc::new(daf_cache::MemoryCache::new(1024)) as Arc<dyn DafCache>,
+            Arc::new(daf_cache::MemoryCache::new(1024)) as Arc<dyn DafCache>,
+            Arc::new(daf_cache::MemoryCache::new(1024)) as Arc<dyn DafCache>,
+            Some(Arc::new(daf_cache::MemoryCache::new(1024)) as Arc<dyn DafCache>),
+        );
+        let key = CacheKey::new("ns", "key");
+        let result = cache
+            .set(key.clone(), "value".to_string(), CacheTier::L1, Some(60))
+            .await;
+        assert!(result.is_ok());
+        let fetched: Option<String> = cache.get(&key, CacheTier::L1).await.unwrap();
+        assert_eq!(fetched, Some("value".to_string()));
     }
 }

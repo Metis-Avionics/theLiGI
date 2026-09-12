@@ -411,6 +411,7 @@ dependencies = [
 [[package]]
 name = "daf-algorithms"
 version = "0.1.0"
+source = "git+https://github.com/RAliane-REBORN/theDAF.git?rev=37d54d78f6e7d1e3baf73db4c2daa00e78266422#37d54d78f6e7d1e3baf73db4c2daa00e78266422"
 dependencies = [
  "async-trait",
  "daf-core",
@@ -420,6 +421,7 @@ dependencies = [
 [[package]]
 name = "daf-application"
 version = "0.1.0"
+source = "git+https://github.com/RAliane-REBORN/theDAF.git?rev=37d54d78f6e7d1e3baf73db4c2daa00e78266422#37d54d78f6e7d1e3baf73db4c2daa00e78266422"
 dependencies = [
  "async-trait",
  "chrono",
@@ -439,6 +441,7 @@ dependencies = [
 [[package]]
 name = "daf-cache"
 version = "0.1.0"
+source = "git+https://github.com/RAliane-REBORN/theDAF.git?rev=37d54d78f6e7d1e3baf73db4c2daa00e78266422#37d54d78f6e7d1e3baf73db4c2daa00e78266422"
 dependencies = [
  "async-trait",
  "daf-core",
@@ -454,6 +457,7 @@ dependencies = [
 [[package]]
 name = "daf-core"
 version = "0.1.0"
+source = "git+https://github.com/RAliane-REBORN/theDAF.git?rev=37d54d78f6e7d1e3baf73db4c2daa00e78266422#37d54d78f6e7d1e3baf73db4c2daa00e78266422"
 dependencies = [
  "async-trait",
  "chrono",
@@ -466,6 +470,7 @@ dependencies = [
 [[package]]
 name = "daf-http"
 version = "0.1.0"
+source = "git+https://github.com/RAliane-REBORN/theDAF.git?rev=37d54d78f6e7d1e3baf73db4c2daa00e78266422#37d54d78f6e7d1e3baf73db4c2daa00e78266422"
 dependencies = [
  "async-trait",
  "axum",
@@ -480,6 +485,7 @@ dependencies = [
 [[package]]
 name = "daf-repository"
 version = "0.1.0"
+source = "git+https://github.com/RAliane-REBORN/theDAF.git?rev=37d54d78f6e7d1e3baf73db4c2daa00e78266422#37d54d78f6e7d1e3baf73db4c2daa00e78266422"
 dependencies = [
  "async-trait",
  "daf-core",
@@ -1776,13 +1782,15 @@ name = "theligi-data-access"
 version = "0.1.0"
 dependencies = [
  "async-trait",
- "daf-application",
  "daf-cache",
+ "daf-core",
  "serde",
  "theligi-algorithm",
  "theligi-authorization",
  "theligi-cache",
+ "theligi-content",
  "theligi-repository",
+ "theligi-validation",
  "thiserror 1.0.69",
  "tokio",
  "tracing",
