@@ -1,0 +1,17 @@
+[package]
+name = "theligi-acquisition"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+
+[lib]
+crate-type = ["rlib"]
+
+[dependencies]
+theligi-http = { workspace = true }
+theligi-browser = { workspace = true }
+theligi-document = { workspace = true }
+tokio = { workspace = true }
+thiserror = { workspace = true }
+serde = { workspace = true }
+async-trait = { workspace = true }

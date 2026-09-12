@@ -1,0 +1,20 @@
+[package]
+name = "theligi-factory"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+
+[dependencies]
+uuid = { workspace = true, features = ["v4", "serde"] }
+thiserror = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
+tokio = { workspace = true, features = ["sync"] }
+tracing = { workspace = true }
+theligi-repository = { path = "../repository" }
+theligi-cache = { path = "../cache" }
+theligi-algorithm = { path = "../algorithm" }
+theligi-authorization = { path = "../authorization" }
+theligi-data-access = { path = "../data_access" }
+
+[lib]
+crate-type = ["rlib"]

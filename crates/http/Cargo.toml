@@ -1,0 +1,15 @@
+[package]
+name = "theligi-http"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+
+[lib]
+crate-type = ["rlib"]
+
+[dependencies]
+reqwest = { workspace = true }
+tokio = { workspace = true }
+thiserror = { workspace = true }
+serde = { workspace = true }
+daf-http = { path = "../../../theDAF/crates/daf-http", package = "daf-http" }

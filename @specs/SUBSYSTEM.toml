@@ -1,0 +1,689 @@
+# ============================================================
+# theLiGI Subsystem Composition Specification
+# ============================================================
+
+[spec]
+name = "theLiGI-subsystems"
+version = "0.1.0"
+parent = "../SPEC.toml"
+
+[authority]
+parent_spec = true
+subsystem_specs = true
+implementation = false
+
+# ============================================================
+# Core
+# ============================================================
+
+[core]
+crate = "theligi-core"
+owns = [
+    "domain_types",
+    "resource_identity",
+    "error_types",
+    "lineage",
+    "correlation",
+    "causation",
+    "schema_version"
+]
+
+forbidden = [
+    "database_logic",
+    "cache_logic",
+    "platform_logic",
+    "browser_logic",
+    "provider_logic"
+]
+
+# ============================================================
+# Context
+# ============================================================
+
+[context]
+crate = "theligi-context"
+
+owns = [
+    "request_context",
+    "identity_context",
+    "authorization_context",
+    "correlation_context",
+    "execution_context"
+]
+
+required = [
+    "user_id",
+    "correlation_id",
+    "schema_version"
+]
+
+# ============================================================
+# Message
+# ============================================================
+
+[message]
+crate = "theligi-message"
+based_on = "theMQL"
+
+owns = [
+    "message",
+    "event",
+    "command",
+    "notification",
+    "message_envelope"
+]
+
+requires = [
+    "schema_version",
+    "message_id",
+    "timestamp",
+    "producer",
+    "correlation_id"
+]
+
+supports = [
+    "causation_id",
+    "idempotency_key",
+    "lineage"
+]
+
+# ============================================================
+# Query
+# ============================================================
+
+[query]
+crate = "theligi-query"
+based_on = "theMQL"
+
+owns = [
+    "query",
+    "query_parser",
+    "query_validator",
+    "query_execution"
+]
+
+must_integrate_with = [
+    "data_access",
+    "authorization",
+    "cache",
+    "algorithm"
+]
+
+# ============================================================
+# Data Access
+# ============================================================
+
+[data_access]
+crate = "theligi-data-access"
+based_on = "theDAF"
+
+contracts = [
+    "Repository",
+    "Cache",
+    "Algorithm",
+    "Authorizer",
+    "DataAccess",
+    "Factory"
+]
+
+execution_order = [
+    "validate",
+    "authorize",
+    "cache_lookup",
+    "repository_lookup",
+    "algorithm",
+    "cache_population"
+]
+
+mutation_order = [
+    "validate",
+    "authorize",
+    "generation_check",
+    "repository_mutation",
+    "generation_increment",
+    "cache_invalidation"
+]
+
+# ============================================================
+# Repository
+# ============================================================
+
+[repository]
+crate = "theligi-repository"
+based_on = "theDAF"
+
+operations = [
+    "create",
+    "get",
+    "save",
+    "delete",
+    "try_update",
+    "try_delete"
+]
+
+invariants = [
+    "CAS",
+    "generation_tracking",
+    "typed_errors",
+    "no_hidden_mutation"
+]
+
+# ============================================================
+# Cache
+# ============================================================
+
+[cache]
+crate = "theligi-cache"
+based_on = "theDAF"
+
+tiers = [
+    "request_local",
+    "LRU",
+    "Moka",
+    "Redis",
+    "Sled"
+]
+
+rules = [
+    "canonical_keys",
+    "generation_validation",
+    "prefix_invalidation",
+    "authorization_on_hit",
+    "user_context_isolation"
+]
+
+# ============================================================
+# Authorization
+# ============================================================
+
+[authorization]
+crate = "theligi-authorization"
+
+authentication_provider = "BetterAuth.rs"
+
+rules = [
+    "fail_closed",
+    "authorize_before_mutation",
+    "authorize_cache_hits",
+    "explicit_context"
+]
+
+# ============================================================
+# Algorithm
+# ============================================================
+
+[algorithm]
+crate = "theligi-algorithm"
+based_on = "theDAF"
+
+contract = "typed_algorithm"
+
+implementations = [
+    "topic_ranker",
+    "topic_generator",
+    "similarity_detector",
+    "saturation_detector",
+    "audience_affinity",
+    "platform_affinity",
+    "evidence_scorer",
+    "gnn_inference"
+]
+
+# ============================================================
+# Factory
+# ============================================================
+
+[factory]
+crate = "theligi-factory"
+based_on = "theDAF"
+
+purpose = "Compose Repository Cache Algorithm Authorizer DataAccess instances."
+
+requirements = [
+    "typed_composition",
+    "dependency_injection",
+    "configuration_validation",
+    "no_global_mutable_state"
+]
+
+# ============================================================
+# Knowledge
+# ============================================================
+
+[knowledge]
+crate = "theligi-knowledge"
+
+stores = [
+    "Oxigraph",
+    "HelixDB"
+]
+
+[knowledge.oxigraph]
+purpose = "RDF/SPARQL semantic graph"
+
+[knowledge.helixdb]
+purpose = "operational graph/vector intelligence"
+
+[knowledge.boundary]
+cross_store_projection_explicit = true
+projection_versioned = true
+provenance_required = true
+
+# ============================================================
+# Acquisition
+# ============================================================
+
+[acquisition]
+crate = "theligi-acquisition"
+
+methods = [
+    "http",
+    "browser",
+    "document"
+]
+
+[acquisition.http]
+crate = "theligi-http"
+implementation = "reqwest"
+
+[acquisition.browser]
+crate = "theligi-browser"
+webdriver = true
+candidate_providers = [
+    "thirtyfour",
+    "fantoccini"
+]
+
+[acquisition.document]
+crate = "theligi-document"
+
+parsing = [
+    "scraper",
+    "html5ever",
+    "lol_html"
+]
+
+[acquisition.provenance]
+required = [
+    "url",
+    "retrieved_at",
+    "content_hash",
+    "acquisition_method",
+    "parser_version",
+    "extraction_rule_version"
+]
+
+[acquisition.output]
+must_emit_message = true
+direct_database_mutation = false
+
+# ============================================================
+# Topic
+# ============================================================
+
+[topic]
+crate = "theligi-topic"
+
+seed = "keyword_dictionary"
+
+operations = [
+    "discover",
+    "rank",
+    "deduplicate",
+    "detect_saturation",
+    "detect_gaps",
+    "approve",
+    "schedule"
+]
+
+[topic.query]
+sparql = true
+
+[topic.inference]
+gnn = true
+
+[topic.pipeline]
+selection_policy = true
+series_assignment = true
+typed_pipeline = true
+transformation_order = ["hot", "impact", "explanation", "problem", "mechanism", "evidence"]
+
+[topic.pipeline.affinity]
+bridge_gnn_to_artifact = true
+
+# ============================================================
+# Inference
+# ============================================================
+
+[inference]
+crate = "theligi-inference"
+
+model = "GNN"
+
+requires = [
+    "versioned_dataset",
+    "versioned_features",
+    "versioned_model",
+    "confidence",
+    "trace"
+]
+
+authority = "recommendation"
+
+# ============================================================
+# Evidence
+# ============================================================
+
+[evidence]
+crate = "theligi-evidence"
+
+[evidence.sufficiency]
+hierarchy = ["primary_source", "secondary_source", "expert_opinion", "observational"]
+thresholds_per_stage = true
+lineage_hash_chain = true
+hash_algorithm = "blake3"
+
+# ============================================================
+# Content
+# ============================================================
+
+[content]
+crate = "theligi-content"
+
+transformations = [
+    "hot",
+    "impact",
+    "explanation",
+    "problem",
+    "mechanism",
+    "evidence"
+]
+
+invariants = [
+    "shared_topic",
+    "shared_thesis",
+    "causal_consistency",
+    "no_topic_drift",
+    "evidence_required",
+    "lineage_required"
+]
+
+[content.state_machine]
+series_fsm = true
+topic_stream_append_only = true
+
+[content.state_machine.series_states]
+states = ["draft", "publishing", "published", "completed"]
+
+[content.state_machine.guards]
+publish_guard = "exactly_6_posts AND shared_topic_lock AND causal_dag_valid"
+complete_guard = "all_posts_published AND evidence_present"
+
+# ============================================================
+# Validation
+# ============================================================
+
+[validation]
+crate = "theligi-validation"
+
+checks = [
+    "schema",
+    "claims",
+    "evidence",
+    "lineage",
+    "platform_constraints",
+    "duplicate_content",
+    "topic_consistency"
+]
+
+# ============================================================
+# Platforms
+# ============================================================
+
+[platform]
+crate = "theligi-platform"
+
+contract = [
+    "authenticate",
+    "resolve_identity",
+    "publish",
+    "schedule",
+    "delete",
+    "fetch_content",
+    "fetch_interactions",
+    "fetch_metrics"
+]
+
+implementations = [
+    "LinkedIn",
+    "X",
+    "Instagram"
+]
+
+platform_logic_must_not_escape_adapter = true
+
+# ============================================================
+# Scheduler
+# ============================================================
+
+[scheduler]
+crate = "theligi-scheduler"
+
+requires = [
+    "idempotency",
+    "timezone",
+    "retry",
+    "dead_letter",
+    "human_approval"
+]
+
+# ============================================================
+# Telemetry
+# ============================================================
+
+[telemetry]
+crate = "theligi-telemetry"
+
+first_class = true
+immutable = true
+versioned = true
+
+metrics = [
+    "impressions",
+    "engagement",
+    "comments",
+    "shares",
+    "saves",
+    "followers",
+    "profile_views",
+    "clicks",
+    "conversions"
+]
+
+[telemetry.normalization]
+canonical_schema = true
+platform_rules = true
+immutability_enforcement = "repository_layer"
+
+# ============================================================
+# Feedback
+# ============================================================
+
+[feedback]
+crate = "theligi-feedback"
+
+pipeline = [
+    "observe",
+    "normalize",
+    "persist",
+    "query",
+    "infer",
+    "rank",
+    "generate",
+    "deploy",
+    "measure",
+    "adapt"
+]
+
+updates = [
+    "topic_rankings",
+    "topic_saturation",
+    "audience_affinity",
+    "platform_affinity",
+    "content_affinity",
+    "emerging_topics"
+]
+
+[feedback.adaptation_policy]
+versioned = true
+score_updates = true
+rollback_on_regression = true
+
+# ============================================================
+# Artifact
+# ============================================================
+
+[artifact]
+crate = "theligi-artifact"
+
+requirements = [
+    "version",
+    "schema",
+    "hash",
+    "lineage",
+    "rollback"
+]
+
+hash = "blake3"
+
+# ============================================================
+# Security
+# ============================================================
+
+[security]
+crate = "theligi-security"
+
+requirements = [
+    "least_privilege",
+    "fail_closed",
+    "credential_isolation",
+    "audit_logging",
+    "secret_manager"
+]
+
+forbidden = [
+    "credentials_in_graph",
+    "tokens_in_graph",
+    "secrets_in_logs"
+]
+
+# ============================================================
+# Observability
+# ============================================================
+
+[observability]
+crate = "theligi-observability"
+
+requirements = [
+    "structured_logs",
+    "metrics",
+    "tracing",
+    "health",
+    "correlation",
+    "causation",
+    "decision_trace"
+]
+
+# ============================================================
+# Dependency boundary
+# ============================================================
+
+[dependency_boundary]
+
+allowed_flow = [
+    "platform -> message",
+    "acquisition -> message",
+    "message -> runtime",
+    "query -> data_access",
+    "data_access -> repository",
+    "data_access -> cache",
+    "data_access -> authorization",
+    "data_access -> algorithm",
+    "knowledge -> repository",
+    "inference -> algorithm",
+    "telemetry -> message",
+    "feedback -> knowledge",
+    "content -> artifact",
+    "scheduler -> platform"
+]
+
+forbidden_flow = [
+    "platform -> helixdb",
+    "platform -> redis",
+    "content -> redis",
+    "inference -> redis",
+    "acquisition -> helixdb",
+    "acquisition -> oxigraph",
+    "query -> helixdb_direct",
+    "query -> redis_direct",
+    "adapter -> repository_implementation",
+    "adapter -> cache_implementation"
+]
+
+# ============================================================
+# Cross-cutting invariants
+# ============================================================
+
+[invariants]
+
+no_cross_runtime = true
+
+no_credentials_in_graph = true
+
+no_unauthorized_cache_hit = true
+
+no_mutation_without_cas = true
+
+no_stale_generation = true
+
+no_direct_backend_access = true
+
+no_unversioned_model_prediction = true
+
+no_untracked_content = true
+
+no_unprovenanced_external_data = true
+
+no_publish_without_validation = true
+
+no_evidence_without_source = true
+
+no_platform_logic_in_core = true
+
+no_silent_data_loss = true
+
+no_silent_spec_override = true
+
+
+# ============================================================
+# Content graph
+# ============================================================
+
+[content.graph]
+crate = "theligi-content"
+
+[content.graph.ownership]
+discrete_model = "theligi-content"
+continuous_model = "theligi-content"
+graph_traversal = "theligi-graph"
+sparql_queries = "theligi-sparql"
+vector_similarity = "theligi-graph"
+
+[content.graph.boundaries]
+discrete_must_not_bypass_series_root = true
+continuous_must_not_use_series_edges = true
+continuous_window_queries_must_not_scan_unbounded = true
+
+[content.graph.data_access]
+discrete_reads = "series_scoped"
+continuous_reads = "topic_scoped_windowed"

@@ -1,0 +1,85 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/core",
+    "crates/schema",
+    "crates/context",
+    "crates/message",
+    "crates/query",
+    "crates/runtime",
+    "crates/data_access",
+    "crates/repository",
+    "crates/cache",
+    "crates/authorization",
+    "crates/algorithm",
+    "crates/factory",
+    "crates/knowledge",
+    "crates/graph",
+    "crates/sparql",
+    "crates/topic",
+    "crates/inference",
+    "crates/content",
+    "crates/validation",
+    "crates/evidence",
+    "crates/acquisition",
+    "crates/http",
+    "crates/browser",
+    "crates/document",
+    "crates/platform",
+    "crates/linkedin",
+    "crates/x",
+    "crates/instagram",
+    "crates/scheduler",
+    "crates/telemetry",
+    "crates/feedback",
+    "crates/artifact",
+    "crates/security",
+    "crates/observability",
+    "crates/server",
+    "crates/cli",
+    "crates/desktop",
+]
+
+[workspace.package]
+edition = "2021"
+rust-version = "1.75"
+license = "MIT"
+
+[workspace.dependencies]
+tokio = { version = "1.35", features = ["full"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+uuid = { version = "1.6", features = ["v4", "v7", "serde"] }
+thiserror = "1.0"
+tracing = "0.1"
+tracing-subscriber = "0.3"
+anyhow = "1.0"
+reqwest = { version = "0.11", default-features = false, features = ["json", "rustls-tls", "rustls-tls-webpki-roots"] }
+async-trait = "0.1"
+clap = { version = "4.4", features = ["derive"] }
+chrono = { version = "0.4", features = ["serde"] }
+blake3 = "1.5"
+theligi-browser = { path = "crates/browser" }
+theligi-document = { path = "crates/document" }
+theligi-http = { path = "crates/http" }
+theligi-platform = { path = "crates/platform" }
+theligi-server = { path = "crates/server" }
+theligi-telemetry = { path = "crates/telemetry" }
+
+# Parent architecture inheritance
+themql-core = { path = "../../theMQL/crates/themql-core", package = "themql-core" }
+themql-message = { path = "../../theMQL/crates/themql-message", package = "themql-message" }
+themql-query = { path = "../../theMQL/crates/themql-query", package = "themql-query" }
+themql-runtime = { path = "../../theMQL/crates/themql-runtime", package = "themql-runtime" }
+themql-telemetry = { path = "../../theMQL/crates/themql-telemetry", package = "themql-telemetry" }
+themql-artifact = { path = "../../theMQL/crates/themql-artifact", package = "themql-artifact" }
+themql-schema = { path = "../../theMQL/crates/themql-schema", package = "themql-schema" }
+
+daf-core = { path = "../../theDAF/crates/daf-core", package = "daf-core" }
+daf-repository = { path = "../../theDAF/crates/daf-repository", package = "daf-repository" }
+daf-cache = { path = "../../theDAF/crates/daf-cache", package = "daf-cache" }
+daf-algorithms = { path = "../../theDAF/crates/daf-algorithms", package = "daf-algorithms" }
+daf-runtime = { path = "../../theDAF/crates/daf-runtime", package = "daf-runtime" }
+daf-messaging = { path = "../../theDAF/crates/daf-messaging", package = "daf-messaging" }
+daf-http = { path = "../../theDAF/crates/daf-http", package = "daf-http" }
+daf-application = { path = "../../theDAF/crates/daf-application", package = "daf-application" }

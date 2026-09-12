@@ -1,0 +1,16 @@
+[package]
+name = "theligi-query"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+
+[lib]
+crate-type = ["rlib"]
+
+[dependencies]
+theligi-core = { path = "../core" }
+theligi-context = { path = "../context" }
+serde = { workspace = true, features = ["derive"] }
+thiserror = { workspace = true }
+serde_json = { workspace = true }
+themql-query = { path = "../../../theMQL/crates/themql-query", package = "themql-query" }

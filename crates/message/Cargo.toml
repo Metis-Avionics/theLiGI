@@ -1,0 +1,17 @@
+[package]
+name = "theligi-message"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+
+[lib]
+crate-type = ["rlib"]
+
+[dependencies]
+theligi-core = { path = "../core" }
+theligi-context = { path = "../context" }
+serde = { workspace = true, features = ["derive"] }
+uuid = { workspace = true, features = ["v4", "serde"] }
+thiserror = { workspace = true }
+serde_json = { workspace = true }
+themql-message = { path = "../../../theMQL/crates/themql-message", package = "themql-message" }

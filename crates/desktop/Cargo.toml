@@ -1,0 +1,16 @@
+[package]
+name = "theligi-desktop"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+
+[[bin]]
+name = "theligi-desktop"
+path = "src/main.rs"
+
+[dependencies]
+theligi-server = { path = "../server" }
+tokio = { workspace = true }
+thiserror = { workspace = true }
+serde = { workspace = true }
+tracing = { workspace = true }

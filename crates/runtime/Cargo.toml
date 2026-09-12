@@ -1,0 +1,19 @@
+[package]
+name = "theligi-runtime"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+
+[lib]
+crate-type = ["rlib"]
+
+[dependencies]
+theligi-core = { path = "../core" }
+theligi-context = { path = "../context" }
+theligi-message = { path = "../message" }
+tokio = { workspace = true, features = ["full"] }
+serde = { workspace = true, features = ["derive"] }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+themql-runtime = { path = "../../../theMQL/crates/themql-runtime", package = "themql-runtime" }
+anyhow = { workspace = true }
